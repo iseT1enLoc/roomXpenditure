@@ -14,6 +14,8 @@ type Credits struct {
 	PaymentMethod string    `gorm:"type:varchar(50)" json:"payment_method"`
 	PaidAt        time.Time `gorm:"autoCreateTime" json:"paid_at"`
 	Status        string    `gorm:"type:varchar(50);default:'completed'" json:"status"`
+}
 
-	User User `gorm:"foreignKey:UserID"`
+func (Credits) TableName() string {
+	return "credits"
 }

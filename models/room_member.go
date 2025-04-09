@@ -12,7 +12,4 @@ type RoomMember struct {
 	UserID   uuid.UUID `gorm:"type:uuid;not null;index:idx_room_user,unique" json:"user_id"`
 	Role     string    `gorm:"type:varchar(20);not null;default:'member'" json:"role"`
 	JoinedAt time.Time `gorm:"autoCreateTime" json:"joined_at"`
-
-	Room Room `gorm:"foreignKey:RoomID"`
-	User User `gorm:"foreignKey:UserID"`
 }

@@ -16,3 +16,7 @@ type Room struct {
 	RoomMembers []RoomMember `gorm:"foreignKey:RoomID"`
 	Expenses    []Expense    `gorm:"foreignKey:RoomID"`
 }
+
+func (Room) TableName() string {
+	return "rooms"
+}

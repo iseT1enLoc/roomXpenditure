@@ -47,3 +47,4 @@ CREATE TABLE payments (
     paid_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(50) DEFAULT 'completed'
 );
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
