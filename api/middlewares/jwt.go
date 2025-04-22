@@ -20,23 +20,22 @@ func JWTMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		fmt.Println(token)
 		data := strings.Split(token, " ")
 		if len(data) != 2 {
 			c.Abort()
 			return
 		}
-		fmt.Println(data[0])
-		fmt.Println(data[1])
-		email, err := serviceimpl.ValidateToken(data[1])
+		email, uid, err := serviceimpl.ValidateToken(data[1])
 		if err != nil {
 			utils.Error(c, http.StatusUnauthorized, utils.ErrTokenInvalidOrExpire, err.Error())
 			c.Abort()
 			return
 		}
-		log.Println(email)
+		log.Println(*email)
+		fmt.Println(*uid)
 
 		c.Set("email", *email)
+		c.Set("user_id", *uid)
 		c.Next()
 	}
 }

@@ -84,6 +84,7 @@ func (s *authService) Login(ctx context.Context, email, password string) (*model
 	}
 
 	// Generate a JWT token for the user if password matches
+	log.Println(user)
 	token, err := s.GenerateToken(user)
 	if err != nil {
 		return nil, "", err
@@ -95,8 +96,9 @@ func (s *authService) Login(ctx context.Context, email, password string) (*model
 
 // GenerateToken creates a JWT token for a user.
 func (s *authService) GenerateToken(user *models.User) (string, error) {
+	log.Println(user.UserID)
 	claims := jwt.MapClaims{
-		"user_id": user.UserID.String(),
+		"user_id": user.UserID,
 		"email":   user.Email,
 		"exp":     time.Now().Add(time.Hour * 24 * 7).Unix(),
 		"iat":     time.Now().Unix(),
@@ -151,48 +153,57 @@ func (s *authService) CheckPasswordHash(password, hash string) bool {
 }
 
 // ValidateToken verifies a JWT token and returns user info.
-func ValidateToken(tokenStr string) (*string, error) {
+func ValidateToken(tokenStr string) (*string, *uuid.UUID, error) {
 	fmt.Println(tokenStr)
-	// Parse the JWT token
+
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		// Ensure the signing method is HMAC (HS256, etc.)
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			log.Printf("Unexpected signing method: %v", token.Header["alg"])
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		log.Println(jwtSecret)
 		return jwtSecret, nil
 	})
 
-	if err != nil {
-		log.Println("JWT parse error:", err)
-		return nil, errors.New("invalid token")
+	if err != nil || !token.Valid {
+		log.Println("JWT parse error or token is not valid:", err)
+		return nil, nil, errors.New("invalid token")
 	}
 
-	if !token.Valid {
-		log.Println("JWT is not valid")
-		return nil, errors.New("invalid token")
-	}
-
-	// Extract and assert claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		log.Println("JWT claims casting failed")
-		return nil, errors.New("invalid claims")
+		return nil, nil, errors.New("invalid claims")
 	}
 
-	// Extract email from claims
+	// Extract and validate email
 	emailVal, ok := claims["email"]
 	if !ok {
 		log.Println("JWT does not contain email")
-		return nil, errors.New("email not found in token")
+		return nil, nil, errors.New("email not found in token")
 	}
-
 	email, ok := emailVal.(string)
 	if !ok || email == "" {
 		log.Println("JWT email is not a string or is empty")
-		return nil, errors.New("invalid email in token")
+		return nil, nil, errors.New("invalid email in token")
 	}
-	fmt.Println(email)
-	return &email, nil
+
+	// Extract and parse user_id
+	userIDVal, ok := claims["user_id"]
+	if !ok {
+		log.Println("JWT does not contain user_id")
+		return nil, nil, errors.New("user_id not found in token")
+	}
+	userIDStr, ok := userIDVal.(string)
+	if !ok {
+		log.Println("JWT user_id is not a string")
+		return nil, nil, errors.New("invalid user_id in token")
+	}
+	uid, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Println("Failed to parse user_id as UUID:", err)
+		return nil, nil, errors.New("invalid UUID format")
+	}
+
+	fmt.Println("Extracted from token:", email, uid)
+	return &email, &uid, nil
 }

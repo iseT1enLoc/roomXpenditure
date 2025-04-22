@@ -60,3 +60,8 @@ func (s *userService) DeleteUser(ctx context.Context, id string) error {
 	}
 	return s.userRepo.Delete(ctx, id)
 }
+
+// GetAllUsers implements services.UserService.
+func (s *userService) GetAllUsers(ctx context.Context) ([]*models.User, error) {
+	return s.userRepo.GetAllUsers(ctx)
+}

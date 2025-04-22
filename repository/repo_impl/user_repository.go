@@ -14,6 +14,15 @@ type userRepository struct {
 	db *gorm.DB
 }
 
+// GetAllUsers implements repository.UserRepository.
+func (u *userRepository) GetAllUsers(ctx context.Context) ([]*models.User, error) {
+	var users []*models.User
+	if err := u.db.Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 // CreateUser implements repository.UserRepository.
 func (u *userRepository) CreateUser(ctx context.Context, user *models.User) error {
 	tx := u.db.Begin()

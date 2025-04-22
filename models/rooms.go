@@ -12,9 +12,9 @@ type Room struct {
 	CreatedBy uuid.UUID `gorm:"type:uuid;not null" json:"created_by"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 
-	Creator     User         `gorm:"foreignKey:CreatedBy"`
-	RoomMembers []RoomMember `gorm:"foreignKey:RoomID"`
-	Expenses    []Expense    `gorm:"foreignKey:RoomID"`
+	Creator User `gorm:"foreignKey:CreatedBy"`
+	// RoomMembers []RoomMember `gorm:"foreignKey:RoomID"`
+	// Expenses    []Expense    `gorm:"foreignKey:RoomID"`
 }
 
 func (Room) TableName() string {
