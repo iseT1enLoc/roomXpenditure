@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -24,32 +25,38 @@ func NewAuthService(userRepo repository.UserRepository) services.AuthService {
 }
 
 // JWT secret (ideally from env)
-var jwtSecret = []byte(os.Getenv("JWT_SECRJWT_SECRETET"))
+var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
 // Signup registers a new user.
 func (s *authService) Signup(ctx context.Context, user *models.User) (string, error) {
+	// Check for invalid user data
 	if user == nil || user.Email == "" || user.PasswordHash == "" || user.Name == "" {
 		return "", errors.New("invalid user data")
 	}
 
+	// Check if the email is already registered
 	existing, _ := s.userRepo.GetByEmail(ctx, user.Email)
 	if existing != nil {
 		return "", errors.New("email already registered")
 	}
 
+	// Hash the plain password (not the hashed one)
 	hashedPwd, err := s.HashPassword(user.PasswordHash)
 	if err != nil {
 		return "", err
 	}
 
+	// Save the hashed password
 	user.PasswordHash = hashedPwd
 	user.UserID = uuid.New()
-	fmt.Println(user)
+
+	// Save the user to the database
 	if err := s.userRepo.CreateUser(ctx, user); err != nil {
 		fmt.Println(err)
 		return "", err
 	}
 
+	// Generate JWT token for the user
 	token, err := s.GenerateToken(user)
 	if err != nil {
 		return "", err
@@ -58,22 +65,31 @@ func (s *authService) Signup(ctx context.Context, user *models.User) (string, er
 	return token, nil
 }
 
-// Login authenticates a user and returns token.
+// Login authenticates a user and returns a token.
 func (s *authService) Login(ctx context.Context, email, password string) (*models.User, string, error) {
+	// Retrieve the user from the database by email
 	user, err := s.userRepo.GetByEmail(ctx, email)
 	if err != nil || user == nil {
+		// Don't log password mismatch errors for security reasons
 		return nil, "", errors.New("invalid email or password")
 	}
 
+	// Log that we are comparing password (you can remove this in production)
+	fmt.Println("Stored hash:", user.PasswordHash)
+	fmt.Println("Input password:", password)
+
+	// Compare the hashed password with the user's input password
 	if !s.CheckPasswordHash(password, user.PasswordHash) {
 		return nil, "", errors.New("invalid email or password")
 	}
 
+	// Generate a JWT token for the user if password matches
 	token, err := s.GenerateToken(user)
 	if err != nil {
 		return nil, "", err
 	}
 
+	// Return the user and the generated token
 	return user, token, nil
 }
 
@@ -112,14 +128,71 @@ func (s *authService) ValidateToken(tokenStr string) (*models.User, error) {
 	return s.userRepo.GetByEmail(ctx, email)
 }
 
-// HashPassword hashes the given plain password.
+// HashPassword hashes plain password
 func (s *authService) HashPassword(password string) (string, error) {
+	// Hash the password using bcrypt
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(bytes), err
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
 }
 
-// CheckPasswordHash compares plain password with hash.
+// CheckPasswordHash compares password with hash
 func (s *authService) CheckPasswordHash(password, hash string) bool {
+	// Compare the entered password (plain-text) with the stored hashed password
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
+	// No need to log the error, we just return true/false based on the result
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	return true
+}
+
+// ValidateToken verifies a JWT token and returns user info.
+func ValidateToken(tokenStr string) (*string, error) {
+	fmt.Println(tokenStr)
+	// Parse the JWT token
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		// Ensure the signing method is HMAC (HS256, etc.)
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			log.Printf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		log.Println(jwtSecret)
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		log.Println("JWT parse error:", err)
+		return nil, errors.New("invalid token")
+	}
+
+	if !token.Valid {
+		log.Println("JWT is not valid")
+		return nil, errors.New("invalid token")
+	}
+
+	// Extract and assert claims
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		log.Println("JWT claims casting failed")
+		return nil, errors.New("invalid claims")
+	}
+
+	// Extract email from claims
+	emailVal, ok := claims["email"]
+	if !ok {
+		log.Println("JWT does not contain email")
+		return nil, errors.New("email not found in token")
+	}
+
+	email, ok := emailVal.(string)
+	if !ok || email == "" {
+		log.Println("JWT email is not a string or is empty")
+		return nil, errors.New("invalid email in token")
+	}
+	fmt.Println(email)
+	return &email, nil
 }

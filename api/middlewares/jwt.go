@@ -1,30 +1,42 @@
 package middlewares
 
 import (
-	"703room/703room.com/services"
+	serviceimpl "703room/703room.com/services/service_impl"
 	"703room/703room.com/utils"
+	"fmt"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-func JWTMiddleware(authService services.AuthService) gin.HandlerFunc {
+func JWTMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("Authorization")
+
 		if token == "" {
 			utils.Error(c, http.StatusUnauthorized, utils.ErrTokenRequired, nil)
 			c.Abort()
 			return
 		}
-
-		user, err := authService.ValidateToken(token)
+		fmt.Println(token)
+		data := strings.Split(token, " ")
+		if len(data) != 2 {
+			c.Abort()
+			return
+		}
+		fmt.Println(data[0])
+		fmt.Println(data[1])
+		email, err := serviceimpl.ValidateToken(data[1])
 		if err != nil {
 			utils.Error(c, http.StatusUnauthorized, utils.ErrTokenInvalidOrExpire, err.Error())
 			c.Abort()
 			return
 		}
+		log.Println(email)
 
-		c.Set("user", user)
+		c.Set("email", *email)
 		c.Next()
 	}
 }

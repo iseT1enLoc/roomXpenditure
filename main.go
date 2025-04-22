@@ -18,8 +18,8 @@ func main() {
 
 	// Apply CORS middleware
 	r.Use(middlewares.CORSMiddleware())
+
 	// Uncomment if you need JWT middleware
-	// r.Use(middlewares.JWTMiddleware("hjgrtjtbun"))
 
 	// Connect to the database
 	db, err := config.ConnectToDatabase()
@@ -41,7 +41,6 @@ func main() {
 	routes.SetUp(50*time.Second, db, r)
 
 	// Run the server on port 8080 and check for errors
-	if err := r.Run(":8080"); err != nil {
-		log.Fatalf("[ERROR] Server failed to start: %v", err)
-	}
+	r.Run("localhost:8080")
+
 }

@@ -5,6 +5,7 @@ import (
 	"703room/703room.com/services"
 	"703room/703room.com/utils"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -45,14 +46,7 @@ func (h *UserHandler) Signup() gin.HandlerFunc {
 			Email:    req.Email,
 			JoinedAt: time.Now(),
 		}
-		fmt.Println(user)
-		// Hash password before storing (you can do this in service or here)
-		hashed, err := h.authService.HashPassword(req.Password)
-		if err != nil {
-			utils.Error(c, http.StatusInternalServerError, "Password hashing failed", err.Error())
-			return
-		}
-		user.PasswordHash = hashed
+		user.PasswordHash = req.Password
 		fmt.Println(user)
 		token, err := h.authService.Signup(c, &user)
 		if err != nil {
@@ -72,50 +66,72 @@ func (h *UserHandler) Signup() gin.HandlerFunc {
 }
 
 // POST /api/auth/login
-func (h *UserHandler) Login(c *gin.Context) {
-	var loginData struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required"`
-	}
+func (h *UserHandler) Login() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		fmt.Println("ENTER LOGIN HANDLER")
+		var loginData struct {
+			Email    string `json:"email" binding:"required,email"`
+			Password string `json:"password" binding:"required"`
+		}
 
-	if err := c.ShouldBindJSON(&loginData); err != nil {
-		utils.Error(c, http.StatusBadRequest, utils.ErrInvalidInput, err.Error())
-		return
-	}
+		if err := c.ShouldBindJSON(&loginData); err != nil {
+			utils.Error(c, http.StatusBadRequest, utils.ErrInvalidInput, err.Error())
+			return
+		}
 
-	user, token, err := h.authService.Login(c.Request.Context(), loginData.Email, loginData.Password)
-	if err != nil {
-		utils.Error(c, http.StatusUnauthorized, utils.ErrLoginFailed, err.Error())
-		return
-	}
+		user, token, err := h.authService.Login(c, loginData.Email, loginData.Password)
+		fmt.Println(loginData.Email)
+		fmt.Println(loginData.Password)
+		if err != nil {
+			utils.Error(c, http.StatusUnauthorized, utils.ErrLoginFailed, err.Error())
+			return
+		}
 
-	utils.Success(c, "Login successful", gin.H{
-		"user": gin.H{
-			"user_id": user.UserID,
-			"name":    user.Name,
-			"email":   user.Email,
-		},
-		"token": token,
-	})
+		utils.Success(c, "Login successful", gin.H{
+			"user": gin.H{
+				"user_id": user.UserID,
+				"name":    user.Name,
+				"email":   user.Email,
+			},
+			"token": token,
+		})
+	}
 }
 
 // GET /api/users/me
-func (h *UserHandler) GetCurrentUser(c *gin.Context) {
-	user, exists := c.Get("user")
-	if !exists {
-		utils.Error(c, http.StatusUnauthorized, utils.ErrUserNotFound, nil)
-		return
-	}
+func (h *UserHandler) GetCurrentUser() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		log.Println("ENTER GET CURRENT USER HANDLER")
 
-	u, ok := user.(*models.User)
-	if !ok {
-		utils.Error(c, http.StatusInternalServerError, utils.ErrInvalidUserType, nil)
-		return
-	}
+		// Retrieve email from context (set by middleware)
+		email, exists := c.Get("email")
+		if !exists {
+			log.Println("Email not found in context")
+			utils.Error(c, http.StatusUnauthorized, utils.ErrUserNotFound, nil)
+			return
+		}
 
-	utils.Success(c, "User fetched successfully", gin.H{
-		"user_id": u.UserID,
-		"name":    u.Name,
-		"email":   u.Email,
-	})
+		userEmail, ok := email.(string)
+		log.Println(userEmail)
+		if !ok || userEmail == "" {
+			log.Println("Email in context is not a valid string")
+			utils.Error(c, http.StatusInternalServerError, utils.ErrInvalidUserType, nil)
+			return
+		}
+
+		// Fetch user from service
+		user, err := h.userService.GetUserByEmail(c, userEmail)
+		if err != nil {
+			log.Printf("Failed to get user by email: %v", err)
+			utils.Error(c, http.StatusNotFound, utils.ErrUserNotFound, nil)
+			return
+		}
+
+		// Return user data
+		utils.Success(c, "User fetched successfully", gin.H{
+			"user_id": user.UserID,
+			"name":    user.Name,
+			"email":   user.Email,
+		})
+	}
 }

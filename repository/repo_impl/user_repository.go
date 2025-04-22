@@ -5,6 +5,7 @@ import (
 	"703room/703room.com/repository"
 	"context"
 	"fmt"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -17,6 +18,7 @@ type userRepository struct {
 func (u *userRepository) CreateUser(ctx context.Context, user *models.User) error {
 	tx := u.db.Begin()
 	err := tx.Create(&user).Error
+	fmt.Println(user)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -39,9 +41,10 @@ func (u *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 	var user models.User
 
 	if err := u.db.Where("email = ?", email).First(&user).Error; err != nil {
-		fmt.Println(user)
+		log.Println(err)
 		return nil, err
 	}
+	fmt.Println(user.Name)
 	return &user, nil
 
 }

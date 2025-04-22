@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -23,8 +22,6 @@ func ConnectToDatabase() (*gorm.DB, error) {
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err == nil {
 			log.Println("Database connection established.")
-			fmt.Println("Connected to DB:", db.NamingStrategy)
-
 			return db, nil
 		}
 
