@@ -10,16 +10,15 @@ import (
 	"703room/703room.com/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 func main() {
 	// Initialize Gin engine with default middleware (logger and recovery)
 	r := gin.Default()
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("Không thể load file .env (có thể bạn đang chạy production).")
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Println("Không thể load file .env (có thể bạn đang chạy production).")
+	// }
 	// Apply CORS middleware
 	r.Use(middlewares.CORSMiddleware())
 
@@ -46,6 +45,6 @@ func main() {
 	routes.SetUp(50*time.Second, db, r)
 
 	// Run the server on port 8080 and check for errors
-	r.Run("localhost:8080")
+	r.Run()
 
 }
