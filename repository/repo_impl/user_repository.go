@@ -7,11 +7,39 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/google/uuid"
+
 	"gorm.io/gorm"
 )
 
 type userRepository struct {
 	db *gorm.DB
+}
+
+// GetAllUserRoomsByUserID implements repository.UserRepository.
+func (r *userRepository) GetAllUserRoomsByUserID(ctx context.Context, userID uuid.UUID) ([]models.Room, error) {
+	var rooms []models.Room
+
+	err := r.db.WithContext(ctx).
+		Table("rooms").
+		Joins("JOIN user_has_payments uhp ON uhp.room_id = rooms.room_id").
+		Where("uhp.user_id = ?", userID).
+		Group("rooms.room_id").
+		Find(&rooms).Error
+
+	return rooms, err
+}
+
+func (r *userRepository) GetUsersByRoomID(ctx context.Context, roomID uuid.UUID) ([]models.User, error) {
+	var users []models.User
+
+	err := r.db.WithContext(ctx).
+		Joins("JOIN user_has_payments uhp ON uhp.user_id = users.user_id").
+		Where("uhp.room_id = ?", roomID).
+		Group("users.user_id").
+		Find(&users).Error
+
+	return users, err
 }
 
 // GetAllUsers implements repository.UserRepository.

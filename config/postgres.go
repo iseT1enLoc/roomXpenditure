@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"log"
+	"os"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -10,7 +11,7 @@ import (
 )
 
 func ConnectToDatabase() (*gorm.DB, error) {
-	dsn := "host=localhost user=gorm password=gorm dbname=gorm port=9920 sslmode=disable TimeZone=Asia/Shanghai"
+	dsn := os.Getenv("DSN")
 
 	var db *gorm.DB
 	var err error

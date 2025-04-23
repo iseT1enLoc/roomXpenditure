@@ -13,6 +13,4 @@ type Expense struct {
 	Amount    float64   `gorm:"type:decimal(10,2);not null" json:"amount"`
 	Notes     string    `gorm:"type:text" json:"notes"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
-
-	//RoomID uuid.UUID `gorm:"type:uuid;not null" json:"room_id"`
 }

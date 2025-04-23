@@ -6,10 +6,17 @@ import (
 	"703room/703room.com/services"
 	"context"
 	"errors"
+
+	"github.com/google/uuid"
 )
 
 type userService struct {
 	userRepo repository.UserRepository
+}
+
+// GetAllUserRoomsByUserID implements services.UserService.
+func (s *userService) GetAllUserRoomsByUserID(ctx context.Context, roomID uuid.UUID) ([]models.Room, error) {
+	panic("unimplemented")
 }
 
 func NewUserService(
@@ -18,6 +25,9 @@ func NewUserService(
 	return &userService{
 		userRepo: userRepo,
 	}
+}
+func (s *userService) GetUsersByRoomID(ctx context.Context, roomID uuid.UUID) ([]models.User, error) {
+	return s.userRepo.GetUsersByRoomID(ctx, roomID)
 }
 
 // RegisterUser registers a new user

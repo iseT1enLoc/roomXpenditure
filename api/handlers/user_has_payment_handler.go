@@ -1,0 +1,194 @@
+package handlers
+
+import (
+	"703room/703room.com/models"
+	"703room/703room.com/services"
+	"703room/703room.com/utils"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
+type UserHasPaymentHandler struct {
+	user_has_payment services.UserHasPaymentService
+	user_service     services.UserService
+}
+
+func NewUserHasPaymentHandler(user_has_payment services.UserHasPaymentService, user_service services.UserService) *UserHasPaymentHandler {
+	return &UserHasPaymentHandler{
+		user_has_payment: user_has_payment,
+		user_service:     user_service,
+	}
+}
+
+func (e *UserHasPaymentHandler) CreateNewExpense() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var expenseBody struct {
+			RoomID   uuid.UUID `json:"room_id"` // Required to associate expense to a room
+			Title    string    `json:"title"`
+			Amount   float64   `json:"amount"`
+			Quantity int       `json:"quantity"`
+			Notes    string    `json:"notes"`
+		}
+
+		// Bind JSON input
+		if err := ctx.ShouldBindJSON(&expenseBody); err != nil {
+			utils.Error(ctx, 400, "Cannot parse expense body", err)
+			return
+		}
+
+		// Get user_id from context
+		id, ok := ctx.Get("user_id")
+		if !ok {
+			utils.Error(ctx, 400, "No user ID found in context", nil)
+			return
+		}
+
+		userID, ok := id.(uuid.UUID)
+		if !ok {
+			utils.Error(ctx, 500, "Invalid user ID format", nil)
+			return
+		}
+
+		// Create UserHasPayment object
+		userHasPayment := &models.UserHasPayment{
+			ID:        uuid.New(),
+			UserID:    userID,
+			RoomID:    expenseBody.RoomID,
+			Title:     expenseBody.Title,
+			Amount:    expenseBody.Amount,
+			Notes:     expenseBody.Notes,
+			CreatedAt: time.Now(),
+			Quantity:  expenseBody.Quantity,
+		}
+
+		// Call service to create expense
+		if err := e.user_has_payment.CreateExpense(ctx, userHasPayment); err != nil {
+			utils.Error(ctx, 400, "Failed to create expense", err)
+			return
+		}
+
+		utils.Created(ctx, "Created expense successfully", userHasPayment)
+	}
+}
+
+// func (e *UserHasPaymentHandler) GetExpenseByID() gin.HandlerFunc {
+// 	return func(ctx *gin.Context) {
+// 		idStr := ctx.Param("id")
+// 		if idStr == "" {
+// 			utils.Error(ctx, 400, "Missing expense ID parameter", nil)
+// 			return
+// 		}
+
+// 		expenseID, err := uuid.Parse(idStr)
+// 		if err != nil {
+// 			utils.Error(ctx, 400, "Invalid UUID format", err)
+// 			return
+// 		}
+
+// 		expense, err := e.expense_service.GetExpenseByID(ctx, expenseID)
+// 		if err != nil {
+// 			utils.Error(ctx, 404, "Expense not found", err)
+// 			return
+// 		}
+
+// 		utils.Success(ctx, "Successfully retrieved expense by ID", expense)
+// 	}
+// }
+
+// http://localhost:8080/api/protected/expense/user?year=2025&month=4&day=22
+func (h *UserHasPaymentHandler) GetExpensesFiltered() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		// Get user_id from context
+		id, exists := ctx.Get("user_id")
+		if !exists {
+			utils.Error(ctx, 401, "User ID not found in context", nil)
+			return
+		}
+
+		userID, ok := id.(uuid.UUID)
+		if !ok {
+			utils.Error(ctx, 500, "User ID type assertion failed", nil)
+			return
+		}
+
+		// Get room_id from query
+		roomIDStr := ctx.Query("room_id")
+		if roomIDStr == "" {
+			utils.Error(ctx, 400, "Missing required parameter: room_id", nil)
+			return
+		}
+
+		roomID, err := uuid.Parse(roomIDStr)
+		if err != nil {
+			utils.Error(ctx, 400, "Invalid room_id format", err)
+			return
+		}
+
+		// Optional filters
+		year := ctx.Query("year")
+		month := ctx.Query("month")
+		day := ctx.Query("day")
+
+		// Call service
+		expenses, err := h.user_has_payment.GetExpensesFiltered(ctx, userID, roomID, year, month, day)
+		if err != nil {
+			utils.Error(ctx, 400, "Failed to fetch expenses", err)
+			return
+		}
+
+		utils.Success(ctx, "Fetched expenses successfully", expenses)
+	}
+}
+
+func (h *UserHasPaymentHandler) CalculateMonthExpense() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		// Get required room_id
+		roomIDStr := ctx.Query("room_id")
+		if roomIDStr == "" {
+			utils.Error(ctx, 400, "Missing required parameter: room_id", nil)
+			return
+		}
+
+		roomID, err := uuid.Parse(roomIDStr)
+		if err != nil {
+			utils.Error(ctx, 400, "Invalid room_id format", err)
+			return
+		}
+
+		// Optional filters
+		year := ctx.Query("year")
+		month := ctx.Query("month")
+		day := ctx.Query("day")
+
+		// Get all users in the room (adjust GetAllUsers to accept roomID if needed)
+		users, err := h.user_service.GetUsersByRoomID(ctx, roomID)
+		if err != nil {
+			utils.Error(ctx, 400, "Failed to fetch users", err)
+			return
+		}
+
+		// Prepare response struct
+		var response_data struct {
+			RoomTotalExpense float64       `json:"room_total_expense"`
+			MemberStat       []member_stat `json:"member_stat"`
+		}
+		var totalRoomAmount float64
+
+		for _, user := range users {
+			value, _ := h.user_has_payment.CalculateMemberExpenseByMemberId(ctx, user.UserID, roomID, year, month, day)
+
+			memStat := member_stat{
+				Member_name: user.Name,
+				Money:       value,
+			}
+			response_data.MemberStat = append(response_data.MemberStat, memStat)
+			totalRoomAmount += value
+		}
+
+		response_data.RoomTotalExpense = totalRoomAmount
+
+		utils.Success(ctx, "Fetched expenses successfully", response_data)
+	}
+}

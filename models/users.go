@@ -15,20 +15,9 @@ type User struct {
 	JoinedAt     time.Time      `gorm:"autoCreateTime" json:"joined_at"`
 	RoomCredits  int            `gorm:"default:1" json:"room_credits"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
-
-	//RoomsCreated []Room       `gorm:"foreignKey:CreatedBy"`
-	//RoomMembers []RoomMember `gorm:"foreignKey:UserID"`
-	//Expenses    []Expense    `gorm:"foreignKey:UserID"`
-	//Credits     []Credits    `gorm:"foreignKey:UserID"`
+	GoogleId     string         `gorm:"type:varchar(255);unique;not null" json:"google_id"` // New Google ID field
 }
 
-//	func (User) TableName() string {
-//		return "users"
-//	}
-//
-// /default:CURRENT_TIMESTAMP
-// autoCreateTime
-// ;default:gen_random_uuid()
 func (User) TableName() string {
 	return "users"
 }
