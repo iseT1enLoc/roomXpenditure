@@ -29,7 +29,7 @@ RoomXpenditure is a backend system built with **Go** and the **Gin web framework
 ---
 
 ## 📁 Project Structure
-
+```bash
 roomXpenditure/
 │
 ├── api/               # Gin route handlers
