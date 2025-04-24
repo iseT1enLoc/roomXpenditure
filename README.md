@@ -30,9 +30,23 @@ RoomXpenditure is a backend system built with **Go** and the **Gin web framework
 
 ## 📁 Project Structure
 
+```bash
+roomXpenditure/
+│
+├── api/               # Gin route handlers
+├── appcontext/        # App-wide shared context (e.g., DB connection, logger)
+├── config/            # Configuration management (YAML/env parsing)
+├── models/            # GORM-based data models
+├── repository/        # Database access layer (CRUD interfaces)
+├── services/          # Business logic layer
+├── utils/             # Utility/helper functions
+│
+├── tables.sql         # SQL setup script for PostgreSQL database schema
+├── docker-compose.yml # Docker Compose configuration
+├── command.txt        # Command list for quick reference
+├── go.mod / go.sum    # Go module files (dependencies and versioning)
+└── main.go            # Application entry point
 
-
-roomXpenditure/ │ ├── api/ # API endpoints and route handlers ├── appcontext/ # Application-wide context (DI, configs) ├── config/ # App configurations ├── models/ # Struct definitions for DB tables ├── repository/ # Repositories for DB operations ├── services/ # Business logic layer ├── utils/ # Utilities and helpers │ ├── tables.sql # SQL schema to initialize DB ├── docker-compose.yml ├── command.txt # Commands for app usage ├── go.mod ├── go.sum └── main.go # Application entry point
 
 
 ---
@@ -52,7 +66,7 @@ go run main.go
 
 ---
 
-## 🙏 Acknowledgments
+### 🙏 Acknowledgments
 
 This project was developed as part of a backend development initiative for student room and expenditure management. Special thanks to:
 
@@ -62,8 +76,7 @@ This project was developed as part of a backend development initiative for stude
 
 ---
 
-## 👨‍💻 Author
-
+### 👨‍💻 Author
 **iseT1enLoc**  
 📧 [Email me](locnvt.it.com)  
 🔗 [GitHub Profile](https://github.com/iseT1enLoc)  
