@@ -66,7 +66,7 @@ go run main.go
 
 ---
 
-### 🙏 Acknowledgments
+## 🙏 Acknowledgments
 
 This project was developed as part of a backend development initiative for student room and expenditure management. Special thanks to:
 
@@ -76,7 +76,7 @@ This project was developed as part of a backend development initiative for stude
 
 ---
 
-### 👨‍💻 Author
+## 👨‍💻 Author
 **iseT1enLoc**  
 📧 [Email me](locnvt.it.com)  
 🔗 [GitHub Profile](https://github.com/iseT1enLoc)  
