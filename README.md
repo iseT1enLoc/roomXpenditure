@@ -70,8 +70,7 @@ This project was developed as part of a backend development initiative for stude
 - **All contributors** who helped test, debug, and improve the system.
 
 ---
-
-## 👨‍💻 Author
+## 🙏 Authors
 **iseT1enLoc**  
 📧 [Email me](locnvt.it.com)  
 🔗 [GitHub Profile](https://github.com/iseT1enLoc)  
