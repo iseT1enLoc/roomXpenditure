@@ -30,7 +30,6 @@ RoomXpenditure is a backend system built with **Go** and the **Gin web framework
 
 ## 📁 Project Structure
 
-```bash
 roomXpenditure/
 │
 ├── api/               # Gin route handlers
@@ -50,9 +49,7 @@ roomXpenditure/
 
 
 ---
-
 ## 🛠️ Setup & Installation
-
 ### 1. Clone the repository
 ```bash
 git clone https://github.com/iseT1enLoc/roomXpenditure.git
@@ -61,13 +58,11 @@ cd roomXpenditure
 ```bash
 sudo docker-compose up
 
-### 2. Run application
+### 3. Run application
 go run main.go
 
 ---
-
 ## 🙏 Acknowledgments
-
 This project was developed as part of a backend development initiative for student room and expenditure management. Special thanks to:
 
 - **My mentors and instructors** for their guidance and support.
