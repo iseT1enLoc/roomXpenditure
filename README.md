@@ -47,8 +47,8 @@ roomXpenditure/
 └── main.go            # Application entry point
 
 
-
 ---
+
 ## 🛠️ Setup & Installation
 ### 1. Clone the repository
 ```bash
@@ -62,6 +62,7 @@ sudo docker-compose up
 go run main.go
 
 ---
+
 ## 🙏 Acknowledgments
 This project was developed as part of a backend development initiative for student room and expenditure management. Special thanks to:
 
@@ -70,6 +71,7 @@ This project was developed as part of a backend development initiative for stude
 - **All contributors** who helped test, debug, and improve the system.
 
 ---
+
 ## 🙏 Authors
 **iseT1enLoc**  
 📧 [Email me](locnvt.it.com)  
