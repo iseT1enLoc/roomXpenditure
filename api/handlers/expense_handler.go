@@ -96,6 +96,7 @@ func (e *ExpenseHandler) GetExpenseByID() gin.HandlerFunc {
 }
 
 type member_stat struct {
+	Member_Id   uuid.UUID
 	Member_name string
 	Money       float64
 }
@@ -137,7 +138,6 @@ func (h *ExpenseHandler) CalculateMonthExpense() gin.HandlerFunc {
 		day := ctx.Query("day")
 
 		users, err := h.user_service.GetAllUsers(ctx)
-		log.Println(users)
 		if err != nil {
 			utils.Error(ctx, 400, "Failed to fetch expenses", err)
 			return
@@ -148,9 +148,9 @@ func (h *ExpenseHandler) CalculateMonthExpense() gin.HandlerFunc {
 		}
 		var total_room_amount float64
 		for i := 0; i < len(users); i += 1 {
-			log.Println(users[i].Name)
 			value, _ := h.expense_service.CalculateMemberExpenseByMemberId(ctx, users[i].UserID, year, month, day)
 			var mem_stat member_stat
+			mem_stat.Member_Id = users[i].UserID
 			mem_stat.Member_name = users[i].Name
 			mem_stat.Money = value
 			total_room_amount += value

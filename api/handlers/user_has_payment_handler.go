@@ -109,7 +109,7 @@ func (h *UserHasPaymentHandler) GetExpensesFiltered() gin.HandlerFunc {
 			return
 		}
 
-		userID, ok := id.(uuid.UUID)
+		_, ok := id.(uuid.UUID)
 		if !ok {
 			utils.Error(ctx, 500, "User ID type assertion failed", nil)
 			return
@@ -132,9 +132,14 @@ func (h *UserHasPaymentHandler) GetExpensesFiltered() gin.HandlerFunc {
 		year := ctx.Query("year")
 		month := ctx.Query("month")
 		day := ctx.Query("day")
-
+		user_id := ctx.Query("user_id")
+		uID, err := uuid.Parse(user_id)
+		if err != nil {
+			utils.Error(ctx, 400, "Invalid user_id format", err)
+			return
+		}
 		// Call service
-		expenses, err := h.user_has_payment.GetExpensesFiltered(ctx, userID, roomID, year, month, day)
+		expenses, err := h.user_has_payment.GetExpensesFiltered(ctx, uID, roomID, year, month, day)
 		if err != nil {
 			utils.Error(ctx, 400, "Failed to fetch expenses", err)
 			return
@@ -187,6 +192,7 @@ func (h *UserHasPaymentHandler) CalculateMonthExpense() gin.HandlerFunc {
 			memStat := member_stat{
 				Member_name: user.Name,
 				Money:       value,
+				Member_Id:   user.UserID,
 			}
 			response_data.MemberStat = append(response_data.MemberStat, memStat)
 			log.Println(memStat)

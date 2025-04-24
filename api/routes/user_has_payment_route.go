@@ -21,7 +21,7 @@ func NewUserHasPaymentRoute(timeout time.Duration, db *gorm.DB, r *gin.RouterGro
 	//r.Use(middlewares.JWTMiddleware(auth_service))
 	p.POST("/expense", handler.CreateNewExpense())
 	//p.GET("/expense/:id", handler.GetExpenseByID())
-	p.GET("/expense/user", handler.GetExpensesFiltered())
+	p.GET("/expense/member", handler.GetExpensesFiltered())
 	log.Println("Enter user has payment route")
 	p.GET("/expense/calc", handler.CalculateMonthExpense())
 	// p.GET("/user/me", handler.GetCurrentUser())
