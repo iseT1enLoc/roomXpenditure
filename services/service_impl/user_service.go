@@ -6,6 +6,7 @@ import (
 	"703room/703room.com/services"
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -27,6 +28,7 @@ func NewUserService(
 	}
 }
 func (s *userService) GetUsersByRoomID(ctx context.Context, roomID uuid.UUID) ([]models.User, error) {
+	fmt.Println(roomID)
 	return s.userRepo.GetUsersByRoomID(ctx, roomID)
 }
 

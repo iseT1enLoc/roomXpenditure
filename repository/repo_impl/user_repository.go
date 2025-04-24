@@ -29,7 +29,6 @@ func (r *userRepository) GetAllUserRoomsByUserID(ctx context.Context, userID uui
 
 	return rooms, err
 }
-
 func (r *userRepository) GetUsersByRoomID(ctx context.Context, roomID uuid.UUID) ([]models.User, error) {
 	var users []models.User
 
