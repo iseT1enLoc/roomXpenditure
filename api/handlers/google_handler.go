@@ -104,6 +104,6 @@ func (h *GoogleHandler) HandleGoogleCallback(c *gin.Context) {
 	}
 	front_end_url := os.Getenv("FRONT_END_URL")
 
-	redirectURL := front_end_url + "/successpage/?token=" + jwtToken
+	redirectURL := front_end_url + "/rooms?token=" + jwtToken
 	c.Redirect(http.StatusPermanentRedirect, redirectURL)
 }

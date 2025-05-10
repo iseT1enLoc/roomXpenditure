@@ -5,6 +5,7 @@ import (
 	"703room/703room.com/services"
 	"703room/703room.com/utils"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -56,5 +57,35 @@ func (r *RoomHandler) CreateNewRoom() gin.HandlerFunc {
 			return
 		}
 		utils.Created(ctx, "successfully create new room", room)
+	}
+}
+
+func (r *RoomHandler) GetAllRoomsOfUserByUserID() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		// Attempt to get user_id from context
+		rawID, exists := ctx.Get("user_id")
+		log.Println("[Handler] Context user_id:", rawID)
+
+		if !exists {
+			utils.Error(ctx, http.StatusBadRequest, "No user ID found in context", nil)
+			return
+		}
+
+		userID, ok := rawID.(uuid.UUID)
+		if !ok {
+			utils.Error(ctx, http.StatusInternalServerError, "Invalid user ID format", nil)
+			return
+		}
+
+		// Fetch rooms from service
+		rooms, err := r.room_service.ListRoomsByUserID(ctx, userID.String())
+		if err != nil {
+			log.Println("[Handler] Failed to get rooms:", err)
+			utils.Error(ctx, http.StatusInternalServerError, "Failed to get rooms", nil)
+			return
+		}
+
+		log.Println("[Handler] Successfully retrieved rooms for user:", userID)
+		utils.Success(ctx, "Get rooms by user ID successfully", rooms)
 	}
 }

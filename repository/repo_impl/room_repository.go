@@ -4,6 +4,7 @@ import (
 	"703room/703room.com/models"
 	"703room/703room.com/repository"
 	"context"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -32,14 +33,30 @@ func (r *roomRepository) GetByID(ctx context.Context, id string) (*models.Room, 
 }
 
 // ListByUserID lists rooms where the user is a member
+// ListByUserID lists rooms where the user is a member
 func (r *roomRepository) ListByUserID(ctx context.Context, userID string) ([]models.Room, error) {
 	var rooms []models.Room
-	if err := r.db.WithContext(ctx).
+
+	// Log the input
+	log.Println("ListByUserID called with userID:", userID)
+
+	tx := r.db.WithContext(ctx).
+		Table("rooms").
 		Joins("JOIN room_members ON room_members.room_id = rooms.room_id").
-		Where("room_members.user_id = ?", userID).
-		Find(&rooms).Error; err != nil {
-		return nil, err
+		Where("room_members.user_id = ?", userID)
+
+	// Log the generated SQL (if needed)
+	stmt := tx.Statement
+	tx.Find(&rooms)
+
+	log.Println("Executed SQL:", stmt.SQL.String(), "with Vars:", stmt.Vars)
+	log.Println("Rooms found:", len(rooms))
+
+	if tx.Error != nil {
+		log.Println("Error while fetching rooms:", tx.Error)
+		return nil, tx.Error
 	}
+
 	return rooms, nil
 }
 
