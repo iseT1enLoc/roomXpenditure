@@ -45,7 +45,7 @@ roomXpenditure/
 ├── command.txt        # Command list for quick reference
 ├── go.mod / go.sum    # Go module files (dependencies and versioning)
 └── main.go            # Application entry point
-
+```
 
 ---
 
@@ -60,7 +60,7 @@ sudo docker-compose up
 
 ### 3. Run application
 go run main.go
-
+```
 ---
 
 ## 🙏 Acknowledgments
