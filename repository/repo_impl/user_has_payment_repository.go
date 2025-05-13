@@ -4,6 +4,7 @@ import (
 	"703room/703room.com/models"
 	"703room/703room.com/repository"
 	"context"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,6 +20,9 @@ type userhaspaymentRepository struct {
 func (u *userhaspaymentRepository) CalculateMemberExpenseByMemberId(ctx context.Context, userID uuid.UUID, room_id uuid.UUID, year string, month string, day string) (float64, error) {
 	var expenses []models.UserHasPayment
 	query := u.db.WithContext(ctx).Where("user_id = ? AND room_id=?", userID, room_id)
+	log.Println(day)
+	log.Println(month)
+	log.Println(year)
 	if year != "" {
 		query = query.Where("EXTRACT(YEAR FROM created_at) = ?", year)
 	}
@@ -35,6 +39,7 @@ func (u *userhaspaymentRepository) CalculateMemberExpenseByMemberId(ctx context.
 	for i := 0; i < len(expenses); i = i + 1 {
 		total_expense = total_expense + expenses[i].Amount
 	}
+	log.Println(total_expense)
 	return total_expense, err
 }
 

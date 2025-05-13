@@ -19,4 +19,5 @@ func SetUp(timeout time.Duration, db *gorm.DB, r *gin.Engine) {
 	NewRoomRoute(100*time.Second, db, publicRoute, protectedRoute)
 	NewUserHasPaymentRoute(100*time.Second, db, publicRoute, protectedRoute)
 	NewGoogleRouter(100*time.Second, db, publicRoute, protectedRoute)
+	NewEmailRoute(100*time.Second, db, publicRoute, protectedRoute)
 }

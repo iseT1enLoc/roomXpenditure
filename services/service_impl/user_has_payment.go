@@ -2,6 +2,7 @@ package serviceimpl
 
 import (
 	"context"
+	"log"
 
 	"703room/703room.com/models"
 	"703room/703room.com/repository"
@@ -35,5 +36,6 @@ func (s *userHasPaymentService) GetExpenseByUserID(ctx context.Context, userID u
 
 // CalculateMemberExpenseByMemberId calculates total expenses for a user in a room with optional date filtering.
 func (s *userHasPaymentService) CalculateMemberExpenseByMemberId(ctx context.Context, userID uuid.UUID, roomID uuid.UUID, year, month, day string) (float64, error) {
+	log.Println("Enter line 39")
 	return s.repo.CalculateMemberExpenseByMemberId(ctx, userID, roomID, year, month, day)
 }
