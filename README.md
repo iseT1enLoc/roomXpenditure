@@ -62,7 +62,8 @@ sudo docker-compose up
 go run main.go
 ```
 ---
-
+## 🔗 FrontEnd Repository
+👉 **RoomXpenseUI Frontend**: [https://github.com/iseT1enLoc/roomXpenseUI](https://github.com/iseT1enLoc/roomXpenseUI)
 ## 🙏 Acknowledgments
 This project was developed as part of a backend development initiative for student room and expenditure management. Special thanks to:
 
