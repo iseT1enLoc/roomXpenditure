@@ -39,3 +39,6 @@ func (s *userHasPaymentService) CalculateMemberExpenseByMemberId(ctx context.Con
 	log.Println("Enter line 39")
 	return s.repo.CalculateMemberExpenseByMemberId(ctx, userID, roomID, year, month, day)
 }
+func (s *userHasPaymentService) GetRoomExpenseDetails(ctx context.Context, roomID uuid.UUID, year, month, day string) ([]models.UserPaymentResponse, error) {
+	return s.repo.GetRoomExpenseDetails(ctx, roomID, year, month, day)
+}

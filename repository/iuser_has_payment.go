@@ -14,4 +14,5 @@ type UserHashPaymentRepository interface {
 	GetExpenseByUserID(ctx context.Context, userid uuid.UUID, room_id uuid.UUID) (*models.Expense, error)
 
 	CalculateMemberExpenseByMemberId(ctx context.Context, userID uuid.UUID, room_id uuid.UUID, year, month, day string) (float64, error)
+	GetRoomExpenseDetails(ctx context.Context, room_id uuid.UUID, year, month, day string) ([]models.UserPaymentResponse, error)
 }

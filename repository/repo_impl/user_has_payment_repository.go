@@ -16,6 +16,39 @@ type userhaspaymentRepository struct {
 	db *gorm.DB
 }
 
+// GetRoomExpenseDetails implements repository.UserHashPaymentRepository.
+func (u *userhaspaymentRepository) GetRoomExpenseDetails(ctx context.Context, room_id uuid.UUID, year string, month string, day string) ([]models.UserPaymentResponse, error) {
+	var payments []models.UserPaymentResponse
+
+	query := u.db.WithContext(ctx).Model(&models.UserHasPayment{}).
+		Joins("JOIN users ON users.user_id = user_has_payments.user_id").
+		Where("user_has_payments.room_id = ?", room_id)
+
+	if year != "" {
+		query = query.Where("EXTRACT(YEAR FROM user_has_payments.created_at) = ?", year)
+	}
+	if month != "" {
+		query = query.Where("EXTRACT(MONTH FROM user_has_payments.created_at) = ?", month)
+	}
+	if day != "" {
+		query = query.Where("EXTRACT(DAY FROM user_has_payments.created_at) = ?", day)
+	}
+
+	err := query.Select(`
+        user_has_payments.id,
+        user_has_payments.room_id,
+        user_has_payments.user_id,
+        user_has_payments.title,
+        user_has_payments.quantity,
+        user_has_payments.amount,
+        user_has_payments.notes,
+        user_has_payments.created_at,
+        users.name AS username
+    `).Scan(&payments).Error
+
+	return payments, err
+}
+
 // CalculateMemberExpenseByMemberId implements repository.UserHashPaymentRepository.
 func (u *userhaspaymentRepository) CalculateMemberExpenseByMemberId(ctx context.Context, userID uuid.UUID, room_id uuid.UUID, year string, month string, day string) (float64, error) {
 	var expenses []models.UserHasPayment

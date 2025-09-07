@@ -13,4 +13,6 @@ type Expense struct {
 	Amount    float64   `gorm:"type:decimal(10,2);not null" json:"amount"`
 	Notes     string    `gorm:"type:text" json:"notes"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+
+	//Users []User `gorm:"many2many:user_has_payments;joinForeignKey:ExpenseID;joinReferences:UserID" json:"users,omitempty"`
 }

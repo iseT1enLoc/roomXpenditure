@@ -16,3 +16,18 @@ type UserHasPayment struct {
 	Notes     string    `gorm:"type:text" json:"notes"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 }
+type UserPaymentResponse struct {
+	ID        uuid.UUID `json:"id"`
+	RoomID    uuid.UUID `json:"room_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Username  string    `json:"username"`
+	Title     string    `json:"title"`
+	Quantity  int       `json:"quantity"`
+	Amount    float64   `json:"amount"`
+	Notes     string    `json:"notes"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (UserHasPayment) TableName() string {
+	return "user_has_payments"
+}

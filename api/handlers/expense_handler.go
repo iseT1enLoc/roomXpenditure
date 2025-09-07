@@ -101,7 +101,6 @@ type member_stat struct {
 	Money       float64
 }
 
-// http://localhost:8080/api/protected/expense/user?year=2025&month=4&day=22
 func (h *ExpenseHandler) GetExpensesFiltered() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id, exists := ctx.Get("user_id")
@@ -132,7 +131,6 @@ func (h *ExpenseHandler) GetExpensesFiltered() gin.HandlerFunc {
 }
 func (h *ExpenseHandler) CalculateMonthExpense() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		// Optional filter by mode, month, year, day
 		year := ctx.Query("year")
 		month := ctx.Query("month")
 		day := ctx.Query("day")

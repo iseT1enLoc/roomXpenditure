@@ -204,3 +204,46 @@ func (h *UserHasPaymentHandler) CalculateMonthExpense() gin.HandlerFunc {
 		utils.Success(ctx, "Fetched expenses successfully", response_data)
 	}
 }
+func (h *UserHasPaymentHandler) GetAllRoomMemberExpenseFilter() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		// Get user_id from context
+		id, exists := ctx.Get("user_id")
+		if !exists {
+			utils.Error(ctx, 401, "User ID not found in context", nil)
+			return
+		}
+
+		_, ok := id.(uuid.UUID)
+		if !ok {
+			utils.Error(ctx, 500, "User ID type assertion failed", nil)
+			return
+		}
+
+		// Get room_id from query
+		roomIDStr := ctx.Query("room_id")
+		if roomIDStr == "" {
+			utils.Error(ctx, 400, "Missing required parameter: room_id", nil)
+			return
+		}
+
+		roomID, err := uuid.Parse(roomIDStr)
+		if err != nil {
+			utils.Error(ctx, 400, "Invalid room_id format", err)
+			return
+		}
+
+		// Optional filters
+		year := ctx.Query("year")
+		month := ctx.Query("month")
+		day := ctx.Query("day")
+
+		// Call service
+		expenses, err := h.user_has_payment.GetRoomExpenseDetails(ctx, roomID, year, month, day)
+		if err != nil {
+			utils.Error(ctx, 400, "Failed to fetch expenses", err)
+			return
+		}
+
+		utils.Success(ctx, "Fetched expenses successfully", expenses)
+	}
+}
