@@ -96,7 +96,6 @@ func (s *authService) Login(ctx context.Context, email, password string) (*model
 
 // GenerateToken creates a JWT token for a user.
 func (s *authService) GenerateToken(user *models.User) (string, error) {
-	log.Println(user.UserID)
 	claims := jwt.MapClaims{
 		"user_id": user.UserID,
 		"email":   user.Email,
@@ -206,4 +205,21 @@ func ValidateToken(tokenStr string) (*string, *uuid.UUID, error) {
 
 	fmt.Println("Extracted from token:", email, uid)
 	return &email, &uid, nil
+}
+func (s *authService) ExtractClaims(tokenStr string) (map[string]interface{}, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		// Ensure token method is HMAC
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return jwtSecret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	}
+	return nil, errors.New("invalid token")
 }

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type UserHandler struct {
@@ -132,6 +133,68 @@ func (h *UserHandler) GetCurrentUser() gin.HandlerFunc {
 			"user_id": user.UserID,
 			"name":    user.Name,
 			"email":   user.Email,
+		})
+	}
+}
+func (h *UserHandler) GetNewAccessToken() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var token struct {
+			Token string `json:"token"` // Capitalized fields!
+		}
+		log.Println("LINE 144")
+		log.Println(token.Token)
+		if err := ctx.ShouldBindJSON(&token); err != nil {
+			utils.Error(ctx, http.StatusInternalServerError, utils.ErrInvalidUserType, nil)
+			return
+		}
+		claims, err := h.authService.ExtractClaims(token.Token)
+		log.Println("LINE 151")
+		log.Println(claims)
+		//extract claims
+		// if err != nil {
+		// 	utils.Error(ctx, http.StatusInternalServerError, utils.ErrInvalidUserType, nil)
+		// 	return
+		// }
+		// Extract and validate email
+		emailVal, ok := claims["email"]
+		if !ok {
+			log.Println("JWT does not contain email")
+			utils.Error(ctx, http.StatusInternalServerError, utils.ErrInvalidUserType, nil)
+			return
+		}
+		email, ok := emailVal.(string)
+		if !ok || email == "" {
+			log.Println("JWT email is not a string or is empty")
+			utils.Error(ctx, http.StatusInternalServerError, utils.ErrInvalidUserType, nil)
+			return
+		}
+
+		// Extract and parse user_id
+		userIDVal, ok := claims["user_id"]
+		if !ok {
+			log.Println("JWT does not contain user_id")
+			utils.Error(ctx, http.StatusInternalServerError, utils.ErrInvalidUserType, nil)
+			return
+		}
+		userIDStr, ok := userIDVal.(string)
+		if !ok {
+			log.Println("JWT user_id is not a string")
+			utils.Error(ctx, http.StatusInternalServerError, utils.ErrInvalidUserType, nil)
+			return
+		}
+		uid, err := uuid.Parse(userIDStr)
+		if err != nil {
+			log.Println("Failed to parse user_id as UUID:", err)
+			utils.Error(ctx, http.StatusInternalServerError, utils.ErrInvalidUserType, nil)
+			return
+		}
+		user := models.User{
+			UserID: uid,
+			Email:  email,
+		}
+		newToken, _ := h.authService.GenerateToken(&user)
+		utils.Success(ctx, "New token to user", gin.H{
+			"token": newToken,
 		})
 	}
 }

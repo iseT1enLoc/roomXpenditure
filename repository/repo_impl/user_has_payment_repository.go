@@ -50,7 +50,6 @@ func (u *userhaspaymentRepository) GetRoomExpenseDetails(ctx context.Context, ro
 	return payments, err
 }
 
-// CalculateMemberExpenseByMemberId implements repository.UserHashPaymentRepository.
 func (u *userhaspaymentRepository) CalculateMemberExpenseByMemberId(ctx context.Context, userID uuid.UUID, room_id uuid.UUID, year string, month string, day string) (float64, error) {
 	var expenses []models.UserHasPayment
 	query := u.db.WithContext(ctx).Where("user_id = ? AND room_id=?", userID, room_id)

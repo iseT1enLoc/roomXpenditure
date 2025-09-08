@@ -17,6 +17,7 @@ func NewUserRoute(timeout time.Duration, db *gorm.DB, r *gin.RouterGroup, p *gin
 	handler := handlers.NewUserHandler(auth_service, user_service)
 	//r.Use(middlewares.JWTMiddleware(auth_service))
 	r.POST("/login", handler.Login())
+	r.POST("/access_token", handler.GetNewAccessToken())
 	r.POST("/signup", handler.Signup())
 	p.GET("/user/me", handler.GetCurrentUser())
 }

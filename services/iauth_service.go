@@ -8,6 +8,7 @@ import (
 type AuthService interface {
 	GenerateToken(user *models.User) (string, error)
 	ValidateToken(tokenStr string) (*models.User, error)
+	ExtractClaims(tokenStr string) (map[string]interface{}, error)
 	Login(ctx context.Context, email, password string) (*models.User, string, error)
 	Signup(ctx context.Context, user *models.User) (string, error)
 	HashPassword(password string) (string, error)
