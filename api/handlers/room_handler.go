@@ -56,7 +56,21 @@ func (r *RoomHandler) CreateNewRoom() gin.HandlerFunc {
 			utils.Error(ctx, 500, "Error happened while create new room", err)
 			return
 		}
-		utils.Created(ctx, "successfully create new room", room)
+		//first member
+		headMember := models.RoomMember{
+			ID:        uuid.New(),
+			RoomID:    room.RoomID,
+			UserID:    userID,
+			CreatedAt: time.Now(),
+			Role:      "truongphong",
+			JoinedAt:  time.Now(),
+		}
+		err = r.room_service.AddMember(ctx, &headMember)
+		if err != nil {
+			utils.Error(ctx, 500, "Error while add new member to the room", err)
+			return
+		}
+		utils.Created(ctx, "Successfully create new room", room)
 	}
 }
 
