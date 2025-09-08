@@ -27,11 +27,12 @@ func NewUserHasPaymentHandler(user_has_payment services.UserHasPaymentService, u
 func (e *UserHasPaymentHandler) CreateNewExpense() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var expenseBody struct {
-			RoomID   uuid.UUID `json:"room_id"` // Required to associate expense to a room
-			Title    string    `json:"title"`
-			Amount   float64   `json:"amount"`
-			Quantity int       `json:"quantity"`
-			Notes    string    `json:"notes"`
+			RoomID   uuid.UUID  `json:"room_id"` // Required to associate expense to a room
+			Title    string     `json:"title"`
+			Amount   float64    `json:"amount"`
+			Quantity int        `json:"quantity"`
+			UsedDate *time.Time `json:"used_date"`
+			Notes    string     `json:"notes"`
 		}
 
 		// Bind JSON input
@@ -52,17 +53,24 @@ func (e *UserHasPaymentHandler) CreateNewExpense() gin.HandlerFunc {
 			utils.Error(ctx, 500, "Invalid user ID format", nil)
 			return
 		}
+		usedDate := expenseBody.UsedDate
+		if usedDate == nil {
+			now := time.Now()
+			usedDate = &now
+		}
+		log.Println(expenseBody)
 
 		// Create UserHasPayment object
 		userHasPayment := &models.UserHasPayment{
 			ID:        uuid.New(),
-			UserID:    userID,
 			RoomID:    expenseBody.RoomID,
+			UserID:    userID,
 			Title:     expenseBody.Title,
+			Quantity:  expenseBody.Quantity,
 			Amount:    expenseBody.Amount,
 			Notes:     expenseBody.Notes,
+			UsedDate:  expenseBody.UsedDate,
 			CreatedAt: time.Now(),
-			Quantity:  expenseBody.Quantity,
 		}
 
 		// Call service to create expense

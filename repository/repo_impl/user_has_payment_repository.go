@@ -25,13 +25,13 @@ func (u *userhaspaymentRepository) GetRoomExpenseDetails(ctx context.Context, ro
 		Where("user_has_payments.room_id = ?", room_id)
 
 	if year != "" {
-		query = query.Where("EXTRACT(YEAR FROM user_has_payments.created_at) = ?", year)
+		query = query.Where("EXTRACT(YEAR FROM user_has_payments.used_date) = ?", year)
 	}
 	if month != "" {
-		query = query.Where("EXTRACT(MONTH FROM user_has_payments.created_at) = ?", month)
+		query = query.Where("EXTRACT(MONTH FROM user_has_payments.used_date) = ?", month)
 	}
 	if day != "" {
-		query = query.Where("EXTRACT(DAY FROM user_has_payments.created_at) = ?", day)
+		query = query.Where("EXTRACT(DAY FROM user_has_payments.used_date) = ?", day)
 	}
 
 	err := query.Select(`
@@ -42,7 +42,8 @@ func (u *userhaspaymentRepository) GetRoomExpenseDetails(ctx context.Context, ro
         user_has_payments.quantity,
         user_has_payments.amount,
         user_has_payments.notes,
-        user_has_payments.created_at,
+        user_has_payments.used_date,
+		user_has_payments.created_at,
         users.name AS username
     `).Scan(&payments).Error
 
