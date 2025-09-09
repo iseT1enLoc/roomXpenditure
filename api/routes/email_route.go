@@ -18,7 +18,9 @@ func NewEmailRoute(timeout time.Duration, db *gorm.DB, r *gin.RouterGroup, p *gi
 	room_repo := repoimpl.NewRoomRepository(db)
 	room_member_repo := repoimpl.NewRoomMemberRepository(db)
 
-	roomService := serviceimpl.NewRoomService(room_repo, room_member_repo)
+	invitation_repo := repoimpl.NewInvitationRepo(db)
+
+	roomService := serviceimpl.NewRoomService(room_repo, room_member_repo, user_repo, invitation_repo)
 	expenseService := serviceimpl.NewUserHasPaymentService(expense_repo)
 	userService := serviceimpl.NewUserService(user_repo)
 

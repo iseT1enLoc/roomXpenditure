@@ -103,7 +103,11 @@ func (u *userRepository) GetByID(ctx context.Context, id string) (*models.User, 
 func (u *userRepository) Update(ctx context.Context, user *models.User) error {
 	return u.db.WithContext(ctx).Save(user).Error
 }
-
+func (r *userRepository) FindByEmails(ctx context.Context, emails []string) ([]models.User, error) {
+	var users []models.User
+	err := r.db.WithContext(ctx).Where("email IN ?", emails).Find(&users).Error
+	return users, err
+}
 func NewUserRepository(db *gorm.DB) repository.UserRepository {
 	return &userRepository{db: db}
 }

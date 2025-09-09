@@ -7,19 +7,88 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 type roomService struct {
 	roomRepo       repository.RoomRepository
+	userRepo       repository.UserRepository
 	roomMemberRepo repository.RoomMemberRepository
+	invitationRepo repository.IInvitationManagement
 }
 
-func NewRoomService(roomRepo repository.RoomRepository, roomMemberRepo repository.RoomMemberRepository) services.RoomService {
+// GetAllPendingInvitationByUserId implements services.RoomService.
+func (s *roomService) GetAllPendingInvitationByUserId(ctx context.Context, userID uuid.UUID) ([]models.RoomExpenseInvitationRecipient, error) {
+	return s.invitationRepo.GetAllPendingInvitationByUserId(ctx, userID)
+}
+
+func (s *roomService) SendInvitationToUsers(ctx context.Context, fromUserID, roomID uuid.UUID, emails []string, message string) error {
+	// 1. Fetch users by email via repository
+	users, err := s.userRepo.FindByEmails(ctx, emails)
+	if err != nil {
+		return err
+	}
+
+	if len(users) == 0 {
+		return errors.New("no users found for provided emails")
+	}
+
+	// 2. Build invitation
+	invitation := &models.RoomExpenseInvitationRequest{
+		ID:                uuid.New(),
+		FromUserId:        &fromUserID,
+		RoomId:            roomID,
+		InvitationMessage: message,
+		CreatedAt:         time.Now(),
+	}
+
+	// 3. Build recipients
+	var recipients []models.RoomExpenseInvitationRecipient
+	for _, u := range users {
+		recipients = append(recipients, models.RoomExpenseInvitationRecipient{
+			ID:           uuid.New(),
+			InvitationId: invitation.ID,
+			UserId:       &u.UserID, // ✅ use ID
+			Status:       models.InvitationPending,
+		})
+	}
+
+	// 4. Save using repository (with transaction)
+	return s.invitationRepo.CreateInvitationWithRecipients(ctx, invitation, recipients)
+}
+
+func (s *roomService) UpdateInvitationRequestStatus(ctx context.Context, recipientID uuid.UUID, status models.InvitationStatus) error {
+	// 1. Update status
+	if err := s.invitationRepo.UpdateInvitationRequest(ctx, recipientID, status); err != nil {
+		return err
+	}
+
+	// 2. If accepted → add member
+	if status == models.InvitationAccepted {
+		recipient, err := s.invitationRepo.GetRecipientWithInvitation(ctx, recipientID)
+		if err != nil {
+			return err
+		}
+
+		roomMember := &models.RoomMember{
+			ID:     uuid.New(),
+			RoomID: recipient.Invitation.RoomId,
+			UserID: *recipient.UserId,
+		}
+		return s.roomMemberRepo.AddMember(ctx, roomMember)
+	}
+
+	return nil
+}
+
+func NewRoomService(roomRepo repository.RoomRepository, roomMemberRepo repository.RoomMemberRepository, userRepo repository.UserRepository, invitationRepo repository.IInvitationManagement) services.RoomService {
 	return &roomService{
 		roomRepo:       roomRepo,
+		userRepo:       userRepo,
 		roomMemberRepo: roomMemberRepo,
+		invitationRepo: invitationRepo,
 	}
 }
 

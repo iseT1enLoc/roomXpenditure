@@ -38,6 +38,8 @@ func main() {
 		&models.Expense{},
 		&models.Credits{}, // if defined in your models
 		&models.UserHasPayment{},
+		&models.RoomExpenseInvitationRecipient{},
+		&models.RoomExpenseInvitationRequest{},
 	)
 	if err != nil {
 		log.Fatalf("[ERROR]: %v", err)

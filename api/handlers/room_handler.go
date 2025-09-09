@@ -103,3 +103,74 @@ func (r *RoomHandler) GetAllRoomsOfUserByUserID() gin.HandlerFunc {
 		utils.Success(ctx, "Get rooms by user ID successfully", rooms)
 	}
 }
+func (r *RoomHandler) GetAllPendingInvitationByUserId() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		rawID, exists := ctx.Get("user_id")
+		log.Println("[Handler] Context user_id:", rawID)
+
+		if !exists {
+			utils.Error(ctx, http.StatusBadRequest, "No user ID found in context", nil)
+			return
+		}
+		userID, ok := rawID.(uuid.UUID)
+		if !ok {
+			utils.Error(ctx, http.StatusInternalServerError, "Invalid user ID format", nil)
+			return
+		}
+		recipient, err := r.room_service.GetAllPendingInvitationByUserId(ctx, userID)
+		if err != nil {
+			utils.Error(ctx, http.StatusBadRequest, "Error while get all pending invitation", nil)
+			return
+		}
+		utils.Success(ctx, "Get all pending invitation successfully", recipient)
+	}
+}
+func (r *RoomHandler) UpdateInvitationRequest() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var request struct {
+			RecipientID uuid.UUID               `json:"recipient_id" binding:"required"`
+			Status      models.InvitationStatus `json:"status" binding:"required"`
+		}
+		if err := ctx.ShouldBindBodyWithJSON(&request); err != nil {
+			utils.Error(ctx, http.StatusBadRequest, "Error while parsing request", err)
+			return
+		}
+		err := r.room_service.UpdateInvitationRequestStatus(ctx, request.RecipientID, request.Status)
+		if err != nil {
+			utils.Error(ctx, http.StatusInternalServerError, "Error while updating invitation", nil)
+			return
+		}
+		utils.Success(ctx, "Update invitation successfully", nil)
+	}
+}
+func (r *RoomHandler) SendInvitationToUsers() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var request struct {
+			RoomID  uuid.UUID `json:"room_id" binding:"required"`
+			Emails  []string  `json:"emails" binding:"required"`
+			Message string    `json:"message"`
+		}
+		log.Println(request.RoomID)
+		log.Println(request.Emails)
+		log.Println(request.Message)
+		if err := ctx.ShouldBindJSON(&request); err != nil {
+			utils.Error(ctx, http.StatusBadRequest, "Error while parsing request", err)
+			return
+		}
+
+		// Get fromUserID (from auth context, token, etc.)
+		fromUserID, exists := ctx.Get("user_id")
+		if !exists {
+			utils.Error(ctx, http.StatusUnauthorized, "Unauthorized", nil)
+			return
+		}
+
+		// Call service
+		if err := r.room_service.SendInvitationToUsers(ctx, fromUserID.(uuid.UUID), request.RoomID, request.Emails, request.Message); err != nil {
+			utils.Error(ctx, http.StatusInternalServerError, "Failed to send invitations", err)
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{"message": "Invitations sent successfully"})
+	}
+}

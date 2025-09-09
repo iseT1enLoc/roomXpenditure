@@ -16,4 +16,5 @@ type UserRepository interface {
 	Delete(ctx context.Context, id string) error
 	GetUsersByRoomID(ctx context.Context, roomID uuid.UUID) ([]models.User, error)
 	GetAllUserRoomsByUserID(ctx context.Context, roomID uuid.UUID) ([]models.Room, error)
+	FindByEmails(ctx context.Context, emails []string) ([]models.User, error)
 }

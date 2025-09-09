@@ -3,6 +3,8 @@ package services
 import (
 	"703room/703room.com/models"
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type RoomService interface {
@@ -16,4 +18,7 @@ type RoomService interface {
 	ListMembersByRoomID(ctx context.Context, roomID string) ([]models.RoomMember, error)
 	RemoveMember(ctx context.Context, roomID, userID string) error
 	UpdateRole(ctx context.Context, roomID, userID, role string) error
+	SendInvitationToUsers(ctx context.Context, fromUserID, roomID uuid.UUID, emails []string, message string) error
+	GetAllPendingInvitationByUserId(ctx context.Context, user_id uuid.UUID) ([]models.RoomExpenseInvitationRecipient, error)
+	UpdateInvitationRequestStatus(ctx context.Context, recipientID uuid.UUID, status models.InvitationStatus) error
 }
