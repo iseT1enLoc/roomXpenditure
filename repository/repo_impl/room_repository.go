@@ -32,8 +32,6 @@ func (r *roomRepository) GetByID(ctx context.Context, id string) (*models.Room, 
 	return &room, nil
 }
 
-// ListByUserID lists rooms where the user is a member
-// ListByUserID lists rooms where the user is a member
 func (r *roomRepository) ListByUserID(ctx context.Context, userID string) ([]models.Room, error) {
 	var rooms []models.Room
 
