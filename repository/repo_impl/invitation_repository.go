@@ -18,21 +18,14 @@ func NewInvitationRepo(db *gorm.DB) repository.IInvitationManagement {
 	return &invitationRepo{db: db}
 }
 
-//	func (r *invitationRepo) GetAllPendingInvitationByUserId(ctx context.Context, userID uuid.UUID) ([]models.RoomExpenseInvitationRecipient, error) {
-//		var recipients []models.RoomExpenseInvitationRecipient
-//		err := r.db.WithContext(ctx).
-//			Where("user_id = ? AND status = ?", userID, models.InvitationPending).
-//			Find(&recipients).Error
-//		return recipients, err
-//	}
 func (r *invitationRepo) GetAllPendingInvitationByUserId(ctx context.Context, userID uuid.UUID) ([]models.RoomExpenseInvitationRecipient, error) {
 	var recipients []models.RoomExpenseInvitationRecipient
 
 	err := r.db.WithContext(ctx).
 		Where("user_id = ? AND status = ?", userID, models.InvitationPending).
-		Preload("Invitation").          // load invitation request
-		Preload("Invitation.FromUser"). // if you want sender info
-		Preload("Invitation.Room").     // if you want room info
+		Preload("Invitation").
+		Preload("Invitation.FromUser").
+		Preload("Invitation.Room").
 		Find(&recipients).Error
 
 	return recipients, err

@@ -22,5 +22,4 @@ func NewGoogleRouter(timeout time.Duration, db *gorm.DB, r *gin.RouterGroup, p *
 	handler := handlers.NewGoogleHandler(google_service, client_id, client_secret, redirect_url)
 	r.GET("/google/login", handler.RedirectToGoogle)
 	r.GET("/google/callback", handler.HandleGoogleCallback)
-
 }

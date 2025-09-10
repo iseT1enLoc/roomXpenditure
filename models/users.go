@@ -19,6 +19,7 @@ type User struct {
 
 	// Many-to-many via UserHasPayment
 	Payments []UserHasPayment `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"payments,omitempty"`
+	Rooms    []Room           `gorm:"many2many:room_members"`
 }
 
 type ReadableUser struct {

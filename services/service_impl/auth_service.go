@@ -202,8 +202,6 @@ func ValidateToken(tokenStr string) (*string, *uuid.UUID, error) {
 		log.Println("Failed to parse user_id as UUID:", err)
 		return nil, nil, errors.New("invalid UUID format")
 	}
-
-	fmt.Println("Extracted from token:", email, uid)
 	return &email, &uid, nil
 }
 func (s *authService) ExtractClaims(tokenStr string) (map[string]interface{}, error) {
