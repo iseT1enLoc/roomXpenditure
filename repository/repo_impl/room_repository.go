@@ -26,35 +26,28 @@ func (r *roomRepository) Create(ctx context.Context, room *models.Room) error {
 // GetByID retrieves a room by its ID
 func (r *roomRepository) GetByID(ctx context.Context, id string) (*models.Room, error) {
 	var room models.Room
-	if err := r.db.WithContext(ctx).Preload("RoomMembers").Preload("Expenses").First(&room, "room_id = ?", id).Error; err != nil {
-		return nil, err
+	log.Println("Enter line 29 of get by id")
+	err := r.db.WithContext(ctx).
+		Preload("Members", "room_id = ?", id).
+		Find(&room)
+	if err != nil {
+		return nil, err.Error
 	}
 	return &room, nil
 }
 
 func (r *roomRepository) ListByUserID(ctx context.Context, userID string) ([]models.Room, error) {
 	var rooms []models.Room
+	err := r.db.WithContext(ctx).
+		Model(&models.Room{}).
+		// get all rooms where this user is a member
+		Joins("JOIN room_members rm ON rm.room_id = rooms.room_id").
+		Where("rm.user_id = ?", userID).
+		// preload all members of the room
+		Preload("Members").
+		Find(&rooms).Error
 
-	// Log the input
-	log.Println("ListByUserID called with userID:", userID)
-
-	tx := r.db.WithContext(ctx).
-		Table("rooms").
-		Joins("JOIN room_members ON room_members.room_id = rooms.room_id").
-		Where("room_members.user_id = ?", userID)
-
-	// Log the generated SQL (if needed)
-	stmt := tx.Statement
-	tx.Find(&rooms)
-
-	log.Println("Executed SQL:", stmt.SQL.String(), "with Vars:", stmt.Vars)
-	log.Println("Rooms found:", len(rooms))
-
-	if tx.Error != nil {
-		log.Println("Error while fetching rooms:", tx.Error)
-		return nil, tx.Error
-	}
-
+	log.Println(err)
 	return rooms, nil
 }
 

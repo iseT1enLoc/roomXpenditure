@@ -150,9 +150,6 @@ func (r *RoomHandler) SendInvitationToUsers() gin.HandlerFunc {
 			Emails  []string  `json:"emails" binding:"required"`
 			Message string    `json:"message"`
 		}
-		log.Println(request.RoomID)
-		log.Println(request.Emails)
-		log.Println(request.Message)
 		if err := ctx.ShouldBindJSON(&request); err != nil {
 			utils.Error(ctx, http.StatusBadRequest, "Error while parsing request", err)
 			return
@@ -167,7 +164,8 @@ func (r *RoomHandler) SendInvitationToUsers() gin.HandlerFunc {
 
 		// Call service
 		if err := r.room_service.SendInvitationToUsers(ctx, fromUserID.(uuid.UUID), request.RoomID, request.Emails, request.Message); err != nil {
-			utils.Error(ctx, http.StatusInternalServerError, "Failed to send invitations", err)
+			log.Println(err)
+			utils.Error(ctx, http.StatusBadRequest, "Error while send request invite users", err)
 			return
 		}
 

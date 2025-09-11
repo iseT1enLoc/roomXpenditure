@@ -11,6 +11,11 @@ type Room struct {
 	RoomName  string    `gorm:"type:varchar(100);not null" json:"room_name"`
 	CreatedBy uuid.UUID `gorm:"type:uuid;not null" json:"created_by"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+
+	ByUser *User `gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL"`
+
+	//one rooms has many users
+	Members []RoomMember `gorm:"foreignKey:RoomID"`
 }
 
 func (Room) TableName() string {

@@ -8,8 +8,8 @@ import (
 
 type RoomMember struct {
 	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
-	RoomID    uuid.UUID `gorm:"type:uuid;not null;index:idx_room_user,unique" json:"room_id"`
-	UserID    uuid.UUID `gorm:"type:uuid;not null;index:idx_room_user,unique" json:"user_id"`
+	RoomID    uuid.UUID `gorm:"not null;index:idx_room_user;unique" json:"room_id"`
+	UserID    uuid.UUID `gorm:"not null;index:idx_room_user;unique" json:"user_id"`
 	Title     string    `gorm:"type:varchar(255);not null" json:"title"`
 	Amount    float64   `gorm:"type:decimal(10,2);not null" json:"amount"`
 	Notes     string    `gorm:"type:text" json:"notes"`

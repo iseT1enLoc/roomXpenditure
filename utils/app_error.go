@@ -10,4 +10,5 @@ const (
 	ErrTokenRequired        = "Authorization token required"
 	ErrTokenInvalidOrExpire = "Invalid or expired token"
 	ErrInternal             = "Internal server error"
+	CanNotInviteOurSelf     = "User can not invite himself"
 )
