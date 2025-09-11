@@ -11,7 +11,7 @@ type User struct {
 	UserID       uuid.UUID      `gorm:"type:uuid;primaryKey" json:"user_id"`
 	Name         string         `gorm:"type:varchar(100);not null" json:"name"`
 	Email        string         `gorm:"type:varchar(255);unique;not null" json:"email"`
-	PasswordHash string         `gorm:"type:varchar(255);not null" json:"-" json:"password"`
+	PasswordHash string         `gorm:"type:varchar(255)" json:"-" json:"password"`
 	JoinedAt     time.Time      `gorm:"autoCreateTime" json:"joined_at"`
 	RoomCredits  int            `gorm:"default:1" json:"-"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:",omitempty"`

@@ -13,6 +13,21 @@ type roomRepository struct {
 	db *gorm.DB
 }
 
+// Save implements repository.RoomRepository.
+func (r *roomRepository) Save(ctx context.Context, room *models.Room) error {
+	return r.db.WithContext(ctx).Save(room).Error
+}
+
+// GetAllRooms implements repository.RoomRepository.
+func (r *roomRepository) GetAllRooms(ctx context.Context) ([]models.Room, error) {
+	var rooms []models.Room
+	err := r.db.WithContext(ctx).Model(&models.Room{}).Preload("Members").Find(&rooms).Error
+	if err != nil {
+		return nil, err
+	}
+	return rooms, err
+}
+
 // NewRoomRepository returns a new RoomRepository instance
 func NewRoomRepository(db *gorm.DB) repository.RoomRepository {
 	return &roomRepository{db: db}
@@ -24,14 +39,18 @@ func (r *roomRepository) Create(ctx context.Context, room *models.Room) error {
 }
 
 // GetByID retrieves a room by its ID
-func (r *roomRepository) GetByID(ctx context.Context, id string) (*models.Room, error) {
+func (r *roomRepository) GetByID(ctx context.Context, room_id string) (*models.Room, error) {
 	var room models.Room
 	log.Println("Enter line 29 of get by id")
 	err := r.db.WithContext(ctx).
-		Preload("Members", "room_id = ?", id).
-		Find(&room)
+		Model(&models.Room{}).
+		Joins("JOIN room_members rm ON rm.room_id = rooms.room_id").
+		Where("rm.room_id = ?", room_id).
+		Preload("ByUser").
+		Preload("Members").
+		Find(&room).Error
 	if err != nil {
-		return nil, err.Error
+		return nil, err
 	}
 	return &room, nil
 }
@@ -40,14 +59,15 @@ func (r *roomRepository) ListByUserID(ctx context.Context, userID string) ([]mod
 	var rooms []models.Room
 	err := r.db.WithContext(ctx).
 		Model(&models.Room{}).
-		// get all rooms where this user is a member
 		Joins("JOIN room_members rm ON rm.room_id = rooms.room_id").
 		Where("rm.user_id = ?", userID).
-		// preload all members of the room
-		Preload("Members").
+		Preload("ByUser").
 		Find(&rooms).Error
 
-	log.Println(err)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
 	return rooms, nil
 }
 

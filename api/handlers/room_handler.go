@@ -172,3 +172,28 @@ func (r *RoomHandler) SendInvitationToUsers() gin.HandlerFunc {
 		ctx.JSON(http.StatusOK, gin.H{"message": "Invitations sent successfully"})
 	}
 }
+func (r *RoomHandler) GetRoomByRoomId() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		// Attempt to get user_id from context
+		room_id := ctx.Query("room_id")
+
+		room, err := r.room_service.GetRoomByID(ctx, room_id)
+		if err != nil {
+			log.Println("[Handler] Failed to get rooms:", err)
+			utils.Error(ctx, http.StatusInternalServerError, "Failed to get rooms", nil)
+			return
+		}
+
+		utils.Success(ctx, "Get rooms by user ID successfully", room)
+	}
+}
+func (r *RoomHandler) UpdateMemberCount() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		err := r.room_service.UpdateMemberCount(ctx)
+		if err != nil {
+			utils.Error(ctx, http.StatusBadRequest, "Fail to update members", nil)
+			return
+		}
+		utils.Success(ctx, "Update member count success", "data")
+	}
+}

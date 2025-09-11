@@ -21,4 +21,5 @@ type RoomService interface {
 	SendInvitationToUsers(ctx context.Context, fromUserID, roomID uuid.UUID, emails []string, message string) error
 	GetAllPendingInvitationByUserId(ctx context.Context, user_id uuid.UUID) ([]models.RoomExpenseInvitationRecipient, error)
 	UpdateInvitationRequestStatus(ctx context.Context, recipientID uuid.UUID, status models.InvitationStatus) error
+	UpdateMemberCount(ctx context.Context) error
 }
