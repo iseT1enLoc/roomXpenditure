@@ -13,6 +13,21 @@ type roomRepository struct {
 	db *gorm.DB
 }
 
+// Save implements repository.RoomRepository.
+func (r *roomRepository) Save(ctx context.Context, room *models.Room) error {
+	return r.db.WithContext(ctx).Save(room).Error
+}
+
+// GetAllRooms implements repository.RoomRepository.
+func (r *roomRepository) GetAllRooms(ctx context.Context) ([]models.Room, error) {
+	var rooms []models.Room
+	err := r.db.WithContext(ctx).Model(&models.Room{}).Preload("Members").Find(&rooms).Error
+	if err != nil {
+		return nil, err
+	}
+	return rooms, err
+}
+
 // NewRoomRepository returns a new RoomRepository instance
 func NewRoomRepository(db *gorm.DB) repository.RoomRepository {
 	return &roomRepository{db: db}
@@ -24,39 +39,35 @@ func (r *roomRepository) Create(ctx context.Context, room *models.Room) error {
 }
 
 // GetByID retrieves a room by its ID
-func (r *roomRepository) GetByID(ctx context.Context, id string) (*models.Room, error) {
+func (r *roomRepository) GetByID(ctx context.Context, room_id string) (*models.Room, error) {
 	var room models.Room
-	if err := r.db.WithContext(ctx).Preload("RoomMembers").Preload("Expenses").First(&room, "room_id = ?", id).Error; err != nil {
+	log.Println("Enter line 29 of get by id")
+	err := r.db.WithContext(ctx).
+		Model(&models.Room{}).
+		Joins("JOIN room_members rm ON rm.room_id = rooms.room_id").
+		Where("rm.room_id = ?", room_id).
+		Preload("ByUser").
+		Preload("Members").
+		Find(&room).Error
+	if err != nil {
 		return nil, err
 	}
 	return &room, nil
 }
 
-// ListByUserID lists rooms where the user is a member
-// ListByUserID lists rooms where the user is a member
 func (r *roomRepository) ListByUserID(ctx context.Context, userID string) ([]models.Room, error) {
 	var rooms []models.Room
+	err := r.db.WithContext(ctx).
+		Model(&models.Room{}).
+		Joins("JOIN room_members rm ON rm.room_id = rooms.room_id").
+		Where("rm.user_id = ?", userID).
+		Preload("ByUser").
+		Find(&rooms).Error
 
-	// Log the input
-	log.Println("ListByUserID called with userID:", userID)
-
-	tx := r.db.WithContext(ctx).
-		Table("rooms").
-		Joins("JOIN room_members ON room_members.room_id = rooms.room_id").
-		Where("room_members.user_id = ?", userID)
-
-	// Log the generated SQL (if needed)
-	stmt := tx.Statement
-	tx.Find(&rooms)
-
-	log.Println("Executed SQL:", stmt.SQL.String(), "with Vars:", stmt.Vars)
-	log.Println("Rooms found:", len(rooms))
-
-	if tx.Error != nil {
-		log.Println("Error while fetching rooms:", tx.Error)
-		return nil, tx.Error
+	if err != nil {
+		log.Println(err)
+		return nil, err
 	}
-
 	return rooms, nil
 }
 

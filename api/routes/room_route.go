@@ -19,8 +19,10 @@ func NewRoomRoute(timeout time.Duration, db *gorm.DB, r *gin.RouterGroup, p *gin
 	handler := handlers.NewRoomHandler(room_service)
 
 	p.POST("/room/create", handler.CreateNewRoom())
+	p.GET("/room", handler.GetRoomByRoomId())
 	p.POST("/room/send_invitation", handler.SendInvitationToUsers())
 	p.GET("/room/invitations", handler.GetAllPendingInvitationByUserId())
 	p.PUT("/room/update/invitations", handler.UpdateInvitationRequest())
 	p.GET("/rooms", handler.GetAllRoomsOfUserByUserID())
+	p.GET("/room/update-member-count", handler.UpdateMemberCount())
 }

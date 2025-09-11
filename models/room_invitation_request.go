@@ -21,7 +21,6 @@ type RoomExpenseInvitationRequest struct {
 	InvitationMessage string     `json:"invitation_message"`
 	CreatedAt         time.Time  `json:"created_at" gorm:"autoCreateTime"`
 
-	// Nếu user bị xóa → FromUserId = NULL (không mất invitation)
 	FromUser *User `gorm:"foreignKey:FromUserId;constraint:OnDelete:SET NULL"`
 	Room     *Room `gorm:"foreignKey:RoomId;constraint:OnDelete:SET NULL"`
 

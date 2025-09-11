@@ -6,6 +6,8 @@ import (
 	"703room/703room.com/services"
 	"context"
 	"errors"
+	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -19,6 +21,22 @@ type roomService struct {
 	invitationRepo repository.IInvitationManagement
 }
 
+// UpdateMemberCount implements services.RoomService.
+func (s *roomService) UpdateMemberCount(ctx context.Context) error {
+	rooms, err := s.roomRepo.GetAllRooms(ctx)
+	log.Println(len(rooms))
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(rooms); i = i + 1 {
+		log.Println(rooms[i].MemBerCount)
+		rooms[i].MemBerCount = len(rooms[i].Members)
+		log.Println(rooms[i].MemBerCount)
+		s.roomRepo.Save(ctx, &rooms[i])
+	}
+	return nil
+}
+
 // GetAllPendingInvitationByUserId implements services.RoomService.
 func (s *roomService) GetAllPendingInvitationByUserId(ctx context.Context, userID uuid.UUID) ([]models.RoomExpenseInvitationRecipient, error) {
 	return s.invitationRepo.GetAllPendingInvitationByUserId(ctx, userID)
@@ -30,7 +48,15 @@ func (s *roomService) SendInvitationToUsers(ctx context.Context, fromUserID, roo
 	if err != nil {
 		return err
 	}
-
+	log.Println(fromUserID)
+	for i := 0; i < len(users); i = i + 1 {
+		log.Println(users[i].Email)
+		if users[i].UserID.String() == fromUserID.String() {
+			return errors.New(users[i].Email + " Can not invite himself!")
+		} else if slices.Contains(emails, users[i].Email) == false {
+			return errors.New(users[i].Email + " is not in current system, ask him to login to the system, redo all process!")
+		}
+	}
 	if len(users) == 0 {
 		return errors.New("no users found for provided emails")
 	}
@@ -71,12 +97,17 @@ func (s *roomService) UpdateInvitationRequestStatus(ctx context.Context, recipie
 		if err != nil {
 			return err
 		}
+		room, err := s.roomRepo.GetByID(ctx, recipient.Invitation.RoomId.String())
 
 		roomMember := &models.RoomMember{
 			ID:     uuid.New(),
 			RoomID: recipient.Invitation.RoomId,
 			UserID: *recipient.UserId,
+			Role:   string(models.RoomMemberMem),
 		}
+		//update and save room member count
+		room.MemBerCount += 1
+		s.roomRepo.Save(ctx, room)
 		return s.roomMemberRepo.AddMember(ctx, roomMember)
 	}
 

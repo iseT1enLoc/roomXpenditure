@@ -83,30 +83,6 @@ func (e *UserHasPaymentHandler) CreateNewExpense() gin.HandlerFunc {
 	}
 }
 
-// func (e *UserHasPaymentHandler) GetExpenseByID() gin.HandlerFunc {
-// 	return func(ctx *gin.Context) {
-// 		idStr := ctx.Param("id")
-// 		if idStr == "" {
-// 			utils.Error(ctx, 400, "Missing expense ID parameter", nil)
-// 			return
-// 		}
-
-// 		expenseID, err := uuid.Parse(idStr)
-// 		if err != nil {
-// 			utils.Error(ctx, 400, "Invalid UUID format", err)
-// 			return
-// 		}
-
-// 		expense, err := e.expense_service.GetExpenseByID(ctx, expenseID)
-// 		if err != nil {
-// 			utils.Error(ctx, 404, "Expense not found", err)
-// 			return
-// 		}
-
-// 		utils.Success(ctx, "Successfully retrieved expense by ID", expense)
-// 	}
-// }
-
 // http://localhost:8080/api/protected/expense/user?year=2025&month=4&day=22
 func (h *UserHasPaymentHandler) GetExpensesFiltered() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
