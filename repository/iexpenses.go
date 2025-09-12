@@ -3,6 +3,7 @@ package repository
 import (
 	"703room/703room.com/models"
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -18,4 +19,5 @@ type ExpenseRepository interface {
 	ListExpensesByRoomID(ctx context.Context, roomID string) ([]models.Expense, error)
 	DeleteExpense(ctx context.Context, id string) error
 	UpdateExpense(ctx context.Context, expense *models.Expense) error
+	GetExpensesFilteredFromStartDateToEndDate(ctx context.Context, userID uuid.UUID, roomID uuid.UUID, start_date, end_date *time.Time) ([]models.UserHasPayment, error)
 }

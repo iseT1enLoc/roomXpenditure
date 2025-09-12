@@ -6,6 +6,7 @@ import (
 	"703room/703room.com/utils"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -229,5 +230,25 @@ func (h *UserHasPaymentHandler) GetAllRoomMemberExpenseFilter() gin.HandlerFunc 
 		}
 
 		utils.Success(ctx, "Fetched expenses successfully", expenses)
+	}
+}
+
+func (h *UserHasPaymentHandler) GetExpensesFilteredFromStartDateToEndDate() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userIDParam := ctx.MustGet("user_id").(uuid.UUID)
+		userIDStr := userIDParam.String()
+
+		roomIDParam := ctx.Query("room_id")
+		startDateParam := ctx.Query("start_date") // optional
+		endDateParam := ctx.Query("end_date")     // optional
+
+		expenses, err := h.user_has_payment.GetExpenseFromStartDateToEndDate(ctx, userIDStr, roomIDParam, startDateParam, endDateParam)
+		if err != nil {
+
+			utils.Error(ctx, http.StatusBadRequest, "Error while getting expense", gin.H{"error": err.Error()})
+			return
+		}
+
+		utils.Success(ctx, "Get expenses success", expenses)
 	}
 }

@@ -6,8 +6,10 @@ import (
 	"703room/703room.com/services"
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -99,5 +101,41 @@ func (s *expenseService) CalculateMemberExpenseByMemberId(ctx context.Context, u
 		return 0, err
 	}
 	return total_money, nil
+
+}
+
+// GetExpenseFilteredFromStartDateToEndDate implements services.ExpenseService.
+func (s *expenseService) GetExpenseFilteredFromStartDateToEndDate(ctx context.Context, userID, roomID, startDate, endDate string) ([]models.UserHasPayment, error) {
+	user_id, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, errors.New("Invalid user id")
+	}
+	room_id, err := uuid.Parse(roomID)
+	if err != nil {
+		return nil, errors.New("Invalid room id")
+	}
+	var start_date *time.Time
+	var end_date *time.Time
+
+	if startDate != "" {
+		t, err := time.Parse("2006-01-02", startDate)
+		if err != nil {
+			return nil, fmt.Errorf("invalid start_date format, use YYYY-MM-DD")
+		}
+		start_date = &t
+	}
+
+	if endDate != "" {
+		t, err := time.Parse("2006-01-02", endDate)
+		if err != nil {
+			return nil, fmt.Errorf("invalid end_date format, use YYYY-MM-DD")
+		}
+		// ensure end_date includes the whole day
+		t = t.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
+		end_date = &t
+	}
+
+	expenses, err := s.expenseRepo.GetExpensesFilteredFromStartDateToEndDate(ctx, user_id, room_id, start_date, end_date)
+	return expenses, err
 
 }

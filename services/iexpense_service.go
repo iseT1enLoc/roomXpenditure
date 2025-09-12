@@ -15,4 +15,5 @@ type ExpenseService interface {
 	ListExpensesByRoomID(ctx context.Context, roomID string) ([]models.Expense, error)
 	DeleteExpense(ctx context.Context, id string) error
 	UpdateExpense(ctx context.Context, expense *models.Expense) error
+	GetExpenseFilteredFromStartDateToEndDate(ctx context.Context, userID, roomID, startDate, endDate string) ([]models.UserHasPayment, error)
 }

@@ -16,6 +16,37 @@ type userhaspaymentRepository struct {
 	db *gorm.DB
 }
 
+func (u *userhaspaymentRepository) GetExpensesFilteredFromStartDateToEndDate(
+	ctx context.Context,
+	userID, roomID uuid.UUID,
+	startDate, endDate *time.Time,
+) ([]models.UserHasPayment, error) {
+	var expenses []models.UserHasPayment
+
+	query := u.db.WithContext(ctx).
+		Where("user_id = ? AND room_id = ?", userID, roomID)
+
+	log.Println("roomID:", roomID)
+	log.Println("userID:", userID)
+	log.Println("startDate:", startDate)
+	log.Println("endDate:", endDate)
+
+	if startDate != nil && endDate != nil {
+		query = query.Where("used_date BETWEEN ? AND ?", *startDate, *endDate)
+	} else if startDate != nil {
+		query = query.Where("used_date >= ?", *startDate)
+	} else if endDate != nil {
+		query = query.Where("used_date <= ?", *endDate)
+	}
+
+	err := query.Order("used_date DESC").Find(&expenses).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return expenses, nil
+}
+
 // GetRoomExpenseDetails implements repository.UserHashPaymentRepository.
 func (u *userhaspaymentRepository) GetRoomExpenseDetails(ctx context.Context, room_id uuid.UUID, year string, month string, day string) ([]models.UserPaymentResponse, error) {
 	var payments []models.UserPaymentResponse

@@ -15,7 +15,7 @@ type Room struct {
 	ByUser      *User     `gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL"`
 
 	//one rooms has many users
-	Members []RoomMember `gorm:"foreignKey:RoomID"`
+	Members []RoomMember `gorm:"foreignKey:RoomID" json:"members,omitempty"`
 }
 
 func (Room) TableName() string {
