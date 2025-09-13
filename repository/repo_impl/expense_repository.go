@@ -5,6 +5,7 @@ import (
 	"703room/703room.com/repository"
 	"context"
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -103,4 +104,19 @@ func (r *expenseRepository) CalculateMemberExpenseByMemberId(ctx context.Context
 		total_expense = total_expense + expenses[i].Amount
 	}
 	return total_expense, err
+}
+
+// GetExpensesFilteredFromStartDateToEndDate implements repository.UserHashPaymentRepository.
+func (u *expenseRepository) GetExpensesFilteredFromStartDateToEndDate(ctx context.Context, userID, roomID uuid.UUID, start_date *time.Time, end_date *time.Time) ([]models.UserHasPayment, error) {
+	var expenses []models.UserHasPayment
+	query := u.db.WithContext(ctx).Where("user_id = ? AND room_id = ?", userID, roomID)
+	if start_date != nil && end_date != nil {
+		query = query.Where("used_date BETWEEN ? AND ?", *start_date, *end_date)
+	} else if start_date != nil {
+		query = query.Where("used_date >= ?", start_date)
+	} else if end_date != nil {
+		query = query.Where("used_date<= ?", end_date)
+	}
+	err := query.Order("used_date DESC").Find(&expenses).Error
+	return expenses, err
 }

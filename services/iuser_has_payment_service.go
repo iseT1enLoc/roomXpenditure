@@ -14,4 +14,5 @@ type UserHasPaymentService interface {
 	GetExpenseByUserID(ctx context.Context, userID uuid.UUID, roomID uuid.UUID) (*models.Expense, error)
 	CalculateMemberExpenseByMemberId(ctx context.Context, userID uuid.UUID, roomID uuid.UUID, year, month, day string) (float64, error)
 	GetRoomExpenseDetails(ctx context.Context, roomID uuid.UUID, year, month, day string) ([]models.UserPaymentResponse, error)
+	GetExpenseFromStartDateToEndDate(ctx context.Context, userId, roomId, StartDate, EndDate string) ([]models.UserPaymentResponse, error)
 }

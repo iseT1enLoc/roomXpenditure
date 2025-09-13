@@ -16,6 +16,51 @@ type userhaspaymentRepository struct {
 	db *gorm.DB
 }
 
+func (u *userhaspaymentRepository) GetExpensesFilteredFromStartDateToEndDate(
+	ctx context.Context,
+	userID, roomID uuid.UUID,
+	startDate, endDate *time.Time,
+) ([]models.UserPaymentResponse, error) {
+	var userPayments []models.UserPaymentResponse
+
+	query := u.db.WithContext(ctx).
+		Table("user_has_payments").
+		Joins("JOIN users ON users.user_id = user_has_payments.user_id").
+		Where("user_has_payments.user_id = ? AND user_has_payments.room_id = ?", userID, roomID)
+
+	log.Println("roomID:", roomID)
+	log.Println("userID:", userID)
+	log.Println("startDate:", startDate)
+	log.Println("endDate:", endDate)
+
+	if startDate != nil && endDate != nil {
+		query = query.Where("used_date BETWEEN ? AND ?", *startDate, *endDate)
+	} else if startDate != nil {
+		query = query.Where("used_date >= ?", *startDate)
+	} else if endDate != nil {
+		query = query.Where("used_date <= ?", *endDate)
+	}
+
+	err := query.Select(`
+		user_has_payments.id,
+		user_has_payments.room_id,
+		user_has_payments.user_id,
+		user_has_payments.title,
+		user_has_payments.quantity,
+		user_has_payments.amount,
+		user_has_payments.notes,
+		user_has_payments.used_date,
+		user_has_payments.created_at,
+		users.name AS username`).
+		Order("user_has_payments.used_date DESC").
+		Scan(&userPayments).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return userPayments, nil
+}
+
 // GetRoomExpenseDetails implements repository.UserHashPaymentRepository.
 func (u *userhaspaymentRepository) GetRoomExpenseDetails(ctx context.Context, room_id uuid.UUID, year string, month string, day string) ([]models.UserPaymentResponse, error) {
 	var payments []models.UserPaymentResponse
@@ -113,6 +158,7 @@ func (u *userhaspaymentRepository) GetExpensesFiltered(ctx context.Context, user
 	}
 
 	err := query.Order("created_at DESC").Find(&expenses).Error
+	log.Println(expenses[0])
 	return expenses, err
 }
 

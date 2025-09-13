@@ -4,6 +4,7 @@ import (
 	"703room/703room.com/models"
 	"703room/703room.com/services"
 	"703room/703room.com/utils"
+	"fmt"
 	"log"
 	"time"
 
@@ -125,7 +126,7 @@ func (h *ExpenseHandler) GetExpensesFiltered() gin.HandlerFunc {
 			utils.Error(ctx, 400, "Failed to fetch expenses", err)
 			return
 		}
-
+		fmt.Println("enterline 128")
 		utils.Success(ctx, "Fetched expenses successfully", expenses)
 	}
 }
