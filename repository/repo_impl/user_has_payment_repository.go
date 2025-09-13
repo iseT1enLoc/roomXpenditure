@@ -26,7 +26,7 @@ func (u *userhaspaymentRepository) GetExpensesFilteredFromStartDateToEndDate(
 	query := u.db.WithContext(ctx).
 		Table("user_has_payments").
 		Joins("JOIN users ON users.user_id = user_has_payments.user_id").
-		Where("user_has_payments.user_id = ? AND user_has_payments.room_id = ?", userID, roomID)
+		Where("user_has_payments.room_id = ?", roomID)
 
 	log.Println("roomID:", roomID)
 	log.Println("userID:", userID)
