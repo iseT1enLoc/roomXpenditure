@@ -20,11 +20,13 @@ func (u *userhaspaymentRepository) GetExpensesFilteredFromStartDateToEndDate(
 	ctx context.Context,
 	userID, roomID uuid.UUID,
 	startDate, endDate *time.Time,
-) ([]models.UserHasPayment, error) {
-	var expenses []models.UserHasPayment
+) ([]models.UserPaymentResponse, error) {
+	var userPayments []models.UserPaymentResponse
 
 	query := u.db.WithContext(ctx).
-		Where("user_id = ? AND room_id = ?", userID, roomID)
+		Table("user_has_payments").
+		Joins("JOIN users ON users.user_id = user_has_payments.user_id").
+		Where("user_has_payments.user_id = ? AND user_has_payments.room_id = ?", userID, roomID)
 
 	log.Println("roomID:", roomID)
 	log.Println("userID:", userID)
@@ -39,12 +41,24 @@ func (u *userhaspaymentRepository) GetExpensesFilteredFromStartDateToEndDate(
 		query = query.Where("used_date <= ?", *endDate)
 	}
 
-	err := query.Order("used_date DESC").Find(&expenses).Error
+	err := query.Select(`
+		user_has_payments.id,
+		user_has_payments.room_id,
+		user_has_payments.user_id,
+		user_has_payments.title,
+		user_has_payments.quantity,
+		user_has_payments.amount,
+		user_has_payments.notes,
+		user_has_payments.used_date,
+		user_has_payments.created_at,
+		users.name AS username`).
+		Order("user_has_payments.used_date DESC").
+		Scan(&userPayments).Error
 	if err != nil {
 		return nil, err
 	}
 
-	return expenses, nil
+	return userPayments, nil
 }
 
 // GetRoomExpenseDetails implements repository.UserHashPaymentRepository.
@@ -144,6 +158,7 @@ func (u *userhaspaymentRepository) GetExpensesFiltered(ctx context.Context, user
 	}
 
 	err := query.Order("created_at DESC").Find(&expenses).Error
+	log.Println(expenses[0])
 	return expenses, err
 }
 

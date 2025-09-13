@@ -123,12 +123,14 @@ func (h *UserHasPaymentHandler) GetExpensesFiltered() gin.HandlerFunc {
 			utils.Error(ctx, 400, "Invalid user_id format", err)
 			return
 		}
+		fmt.Println("[ENTERLINE]-132")
 		// Call service
 		expenses, err := h.user_has_payment.GetExpensesFiltered(ctx, uID, roomID, year, month, day)
 		if err != nil {
 			utils.Error(ctx, 400, "Failed to fetch expenses", err)
 			return
 		}
+		fmt.Println("[ENTERLINE]-132")
 
 		utils.Success(ctx, "Fetched expenses successfully", expenses)
 	}
@@ -185,8 +187,8 @@ func (h *UserHasPaymentHandler) CalculateMonthExpense() gin.HandlerFunc {
 		}
 
 		response_data.RoomTotalExpense = totalRoomAmount
-
-		utils.Success(ctx, "Fetched expenses successfully", response_data)
+		log.Println("print line 190")
+		utils.Success(ctx, "Fetched expenses successfully hii", response_data)
 	}
 }
 func (h *UserHasPaymentHandler) GetAllRoomMemberExpenseFilter() gin.HandlerFunc {
@@ -229,7 +231,7 @@ func (h *UserHasPaymentHandler) GetAllRoomMemberExpenseFilter() gin.HandlerFunc 
 			return
 		}
 
-		utils.Success(ctx, "Fetched expenses successfully", expenses)
+		utils.Success(ctx, "Fetched expenses successfully hihi", expenses)
 	}
 }
 

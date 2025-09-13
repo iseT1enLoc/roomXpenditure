@@ -45,7 +45,7 @@ func (s *userHasPaymentService) CalculateMemberExpenseByMemberId(ctx context.Con
 func (s *userHasPaymentService) GetRoomExpenseDetails(ctx context.Context, roomID uuid.UUID, year, month, day string) ([]models.UserPaymentResponse, error) {
 	return s.repo.GetRoomExpenseDetails(ctx, roomID, year, month, day)
 }
-func (s *userHasPaymentService) GetExpenseFromStartDateToEndDate(ctx context.Context, userId, roomId, StartDate, EndDate string) ([]models.UserHasPayment, error) {
+func (s *userHasPaymentService) GetExpenseFromStartDateToEndDate(ctx context.Context, userId, roomId, StartDate, EndDate string) ([]models.UserPaymentResponse, error) {
 	user_id, err := uuid.Parse(userId)
 	if err != nil {
 		return nil, errors.New("Invalid user id")

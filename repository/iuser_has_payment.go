@@ -17,5 +17,5 @@ type UserHashPaymentRepository interface {
 	CalculateMemberExpenseByMemberId(ctx context.Context, userID uuid.UUID, room_id uuid.UUID, year, month, day string) (float64, error)
 	GetRoomExpenseDetails(ctx context.Context, room_id uuid.UUID, year, month, day string) ([]models.UserPaymentResponse, error)
 
-	GetExpensesFilteredFromStartDateToEndDate(ctx context.Context, userID uuid.UUID, roomID uuid.UUID, start_date, end_date *time.Time) ([]models.UserHasPayment, error)
+	GetExpensesFilteredFromStartDateToEndDate(ctx context.Context, userID uuid.UUID, roomID uuid.UUID, start_date, end_date *time.Time) ([]models.UserPaymentResponse, error)
 }
