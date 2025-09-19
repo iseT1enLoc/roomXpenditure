@@ -120,3 +120,45 @@ func (u *expenseRepository) GetExpensesFilteredFromStartDateToEndDate(ctx contex
 	err := query.Order("used_date DESC").Find(&expenses).Error
 	return expenses, err
 }
+
+// GetExpensesFilteredFromStartDateToEndDateOfOneUser implements repository.ExpenseRepository.
+func (r *expenseRepository) GetExpensesFilteredFromStartDateToEndDateOfOneUser(ctx context.Context, userID uuid.UUID, roomID uuid.UUID, startDate *time.Time, endDate *time.Time, page, limit int) ([]models.UserPaymentResponse, int64, error) {
+	var userPayments []models.UserPaymentResponse
+	var total int64
+	query := r.db.WithContext(ctx).
+		Table("user_has_payments").
+		Joins("JOIN users ON users.user_id = user_has_payments.user_id").
+		Where("user_has_payments.room_id = ?", roomID)
+
+	if startDate != nil && endDate != nil {
+		query = query.Where("used_date BETWEEN ? AND ?", *startDate, *endDate)
+	} else if startDate != nil {
+		query = query.Where("used_date >= ?", *startDate)
+	} else if endDate != nil {
+		query = query.Where("used_date <= ?", *endDate)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	offset := (page - 1) * limit
+	if err := query.Select(`
+		user_has_payments.id,
+		user_has_payments.room_id,
+		user_has_payments.user_id,
+		user_has_payments.title,
+		user_has_payments.quantity,
+		user_has_payments.amount,
+		user_has_payments.notes,
+		user_has_payments.used_date,
+		user_has_payments.created_at,
+		users.name AS username`).
+		Order("user_has_payments.used_date DESC").
+		Offset(offset).
+		Limit(limit).
+		Scan(&userPayments).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return userPayments, total, nil
+}

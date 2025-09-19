@@ -6,6 +6,7 @@ import (
 	"703room/703room.com/utils"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -159,5 +160,44 @@ func (h *ExpenseHandler) CalculateMonthExpense() gin.HandlerFunc {
 		log.Println(response_data.Rooom_total_expense)
 		log.Println(response_data.Member_Stat)
 		utils.Success(ctx, "Fetched expenses successfully", response_data)
+	}
+}
+func (h *ExpenseHandler) GetExpensesFilteredFromStartDateToEndDate() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id, exists := ctx.Get("user_id")
+		if !exists {
+			utils.Error(ctx, 401, "User ID not found in context", nil)
+			return
+		}
+
+		userID, ok := id.(string)
+		if !ok {
+			utils.Error(ctx, 500, "User ID type assertion failed", nil)
+			return
+		}
+		roomIDParam := ctx.Query("room_id")
+		startDateParam := ctx.Query("start_date")
+		endDateParam := ctx.Query("end_date")
+
+		pageStr := ctx.DefaultQuery("page", "0")
+		limitStr := ctx.DefaultQuery("size", "10")
+
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page < 0 {
+			page = 0
+		}
+
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit < 1 {
+			limit = 10
+		}
+		// expenses, err := h.expense_service.GetExpensesFiltered(ctx, userID, year, month, day)
+		expenses, _, err := h.expense_service.GetExpenseFilteredFromStartDateToEndDateOfParticularUser(ctx, userID, roomIDParam, startDateParam, endDateParam, 0, 50)
+		if err != nil {
+			utils.Error(ctx, 400, "Failed to fetch expenses", err)
+			return
+		}
+
+		utils.Success(ctx, "Fetched expenses successfully", expenses)
 	}
 }

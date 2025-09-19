@@ -20,4 +20,5 @@ type ExpenseRepository interface {
 	DeleteExpense(ctx context.Context, id string) error
 	UpdateExpense(ctx context.Context, expense *models.Expense) error
 	GetExpensesFilteredFromStartDateToEndDate(ctx context.Context, userID uuid.UUID, roomID uuid.UUID, start_date, end_date *time.Time) ([]models.UserHasPayment, error)
+	GetExpensesFilteredFromStartDateToEndDateOfOneUser(ctx context.Context, userID uuid.UUID, roomID uuid.UUID, start_date, end_date *time.Time, page, limit int) ([]models.UserPaymentResponse, int64, error)
 }
