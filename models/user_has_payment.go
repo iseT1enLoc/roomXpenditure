@@ -29,6 +29,12 @@ type UserPaymentResponse struct {
 	UsedDate  *time.Time `gorm:"type:timestamp;default:now()" json:"used_date"` // nullable, auto if null
 	CreatedAt time.Time  `json:"created_at"`
 }
+type PaginationUserHasPaymentResponse struct {
+	Data      []UserPaymentResponse `json:"expenses"`
+	Total     int64                 `json:"total"`
+	PageSize  int64                 `json:"page_size"`
+	PageLimit int64                 `json:"page_limit"`
+}
 
 func (UserHasPayment) TableName() string {
 	return "user_has_payments"

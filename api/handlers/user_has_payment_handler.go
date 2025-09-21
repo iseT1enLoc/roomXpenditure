@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -241,16 +242,71 @@ func (h *UserHasPaymentHandler) GetExpensesFilteredFromStartDateToEndDate() gin.
 		userIDStr := userIDParam.String()
 
 		roomIDParam := ctx.Query("room_id")
-		startDateParam := ctx.Query("start_date") // optional
-		endDateParam := ctx.Query("end_date")     // optional
+		startDateParam := ctx.Query("start_date")
+		endDateParam := ctx.Query("end_date")
 
-		expenses, err := h.user_has_payment.GetExpenseFromStartDateToEndDate(ctx, userIDStr, roomIDParam, startDateParam, endDateParam)
+		pageStr := ctx.DefaultQuery("page", "0")
+		limitStr := ctx.DefaultQuery("size", "10")
+
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page < 0 {
+			page = 0
+		}
+
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit < 1 {
+			limit = 10
+		}
+		log.Println(userIDParam)
+		expenses, total, err := h.user_has_payment.GetExpenseFromStartDateToEndDate(ctx, userIDStr, roomIDParam, startDateParam, endDateParam, page, limit)
 		if err != nil {
 
 			utils.Error(ctx, http.StatusBadRequest, "Error while getting expense", gin.H{"error": err.Error()})
 			return
 		}
+		response := models.PaginationUserHasPaymentResponse{
+			Data:      expenses,
+			Total:     total,
+			PageSize:  int64(page),
+			PageLimit: int64(limit),
+		}
 
-		utils.Success(ctx, "Get expenses success", expenses)
+		utils.Success(ctx, "Get expenses success", response)
+	}
+}
+func (h *UserHasPaymentHandler) GetExpensesFilteredFromStartDateToEndDateOfOneMember() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userIDParam := ctx.Query("user_id")
+		roomIDParam := ctx.Query("room_id")
+		startDateParam := ctx.Query("start_date")
+		endDateParam := ctx.Query("end_date")
+
+		pageStr := ctx.DefaultQuery("page", "0")
+		limitStr := ctx.DefaultQuery("size", "10")
+
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page < 0 {
+			page = 0
+		}
+
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit < 1 {
+			limit = 10
+		}
+
+		expenses, total, err := h.user_has_payment.GetExpenseFromStartDateToEndDateOfOneMember(ctx, userIDParam, roomIDParam, startDateParam, endDateParam, page, limit)
+		if err != nil {
+
+			utils.Error(ctx, http.StatusBadRequest, "Error while getting expense", gin.H{"error": err.Error()})
+			return
+		}
+		response := models.PaginationUserHasPaymentResponse{
+			Data:      expenses,
+			Total:     total,
+			PageSize:  int64(page),
+			PageLimit: int64(limit),
+		}
+
+		utils.Success(ctx, "Get expenses success", response)
 	}
 }

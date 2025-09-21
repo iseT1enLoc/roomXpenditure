@@ -139,3 +139,38 @@ func (s *expenseService) GetExpenseFilteredFromStartDateToEndDate(ctx context.Co
 	return expenses, err
 
 }
+
+// GetExpenseFilteredFromStartDateToEndDateOfParticularUser implements services.ExpenseService.
+func (s *expenseService) GetExpenseFilteredFromStartDateToEndDateOfParticularUser(ctx context.Context, userID string, roomID string, startDate string, endDate string, page, limit int64) ([]models.UserHasPayment, int64, error) {
+	user_id, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, 0, errors.New("Invalid user id")
+	}
+	room_id, err := uuid.Parse(roomID)
+	if err != nil {
+		return nil, 0, errors.New("Invalid room id")
+	}
+	var start_date *time.Time
+	var end_date *time.Time
+
+	if startDate != "" {
+		t, err := time.Parse("2006-01-02", startDate)
+		if err != nil {
+			return nil, 0, fmt.Errorf("invalid start_date format, use YYYY-MM-DD")
+		}
+		start_date = &t
+	}
+
+	if endDate != "" {
+		t, err := time.Parse("2006-01-02", endDate)
+		if err != nil {
+			return nil, 0, fmt.Errorf("invalid end_date format, use YYYY-MM-DD")
+		}
+		// ensure end_date includes the whole day
+		t = t.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
+		end_date = &t
+	}
+
+	expenses, err := s.expenseRepo.GetExpensesFilteredFromStartDateToEndDate(ctx, user_id, room_id, start_date, end_date)
+	return expenses, 0, err
+}

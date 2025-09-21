@@ -19,19 +19,14 @@ type userhaspaymentRepository struct {
 func (u *userhaspaymentRepository) GetExpensesFilteredFromStartDateToEndDate(
 	ctx context.Context,
 	userID, roomID uuid.UUID,
-	startDate, endDate *time.Time,
-) ([]models.UserPaymentResponse, error) {
+	startDate, endDate *time.Time, page, limit int,
+) ([]models.UserPaymentResponse, int64, error) {
 	var userPayments []models.UserPaymentResponse
-
+	var total int64
 	query := u.db.WithContext(ctx).
 		Table("user_has_payments").
 		Joins("JOIN users ON users.user_id = user_has_payments.user_id").
 		Where("user_has_payments.room_id = ?", roomID)
-
-	log.Println("roomID:", roomID)
-	log.Println("userID:", userID)
-	log.Println("startDate:", startDate)
-	log.Println("endDate:", endDate)
 
 	if startDate != nil && endDate != nil {
 		query = query.Where("used_date BETWEEN ? AND ?", *startDate, *endDate)
@@ -41,7 +36,11 @@ func (u *userhaspaymentRepository) GetExpensesFilteredFromStartDateToEndDate(
 		query = query.Where("used_date <= ?", *endDate)
 	}
 
-	err := query.Select(`
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	offset := (page - 1) * limit
+	if err := query.Select(`
 		user_has_payments.id,
 		user_has_payments.room_id,
 		user_has_payments.user_id,
@@ -53,12 +52,13 @@ func (u *userhaspaymentRepository) GetExpensesFilteredFromStartDateToEndDate(
 		user_has_payments.created_at,
 		users.name AS username`).
 		Order("user_has_payments.used_date DESC").
-		Scan(&userPayments).Error
-	if err != nil {
-		return nil, err
+		Offset(offset).
+		Limit(limit).
+		Scan(&userPayments).Error; err != nil {
+		return nil, 0, err
 	}
 
-	return userPayments, nil
+	return userPayments, total, nil
 }
 
 // GetRoomExpenseDetails implements repository.UserHashPaymentRepository.
@@ -148,20 +148,62 @@ func (u *userhaspaymentRepository) GetExpensesFiltered(ctx context.Context, user
 	var expenses []models.UserHasPayment
 	query := u.db.WithContext(ctx).Where("user_id = ? AND room_id = ?", userID, room_id)
 	if year != "" {
-		query = query.Where("EXTRACT(YEAR FROM created_at) = ?", year)
+		query = query.Where("EXTRACT(YEAR FROM used_date) = ?", year)
 	}
 	if month != "" {
-		query = query.Where("EXTRACT(MONTH FROM created_at) = ?", month)
+		query = query.Where("EXTRACT(MONTH FROM used_date) = ?", month)
 	}
 	if day != "" {
-		query = query.Where("EXTRACT(DAY FROM created_at) = ?", day)
+		query = query.Where("EXTRACT(DAY FROM used_date) = ?", day)
 	}
 
-	err := query.Order("created_at DESC").Find(&expenses).Error
-	log.Println(expenses[0])
+	err := query.Order("used_date DESC").Find(&expenses).Error
+	// log.Println(expenses[0])
 	return expenses, err
 }
 
+// GetExpensesFilteredFromStartDateToEndDateOfOneMember implements repository.UserHashPaymentRepository.
+func (u *userhaspaymentRepository) GetExpensesFilteredFromStartDateToEndDateOfOneMember(ctx context.Context, userID uuid.UUID, roomID uuid.UUID, startDate *time.Time, endDate *time.Time, page int, limit int) ([]models.UserPaymentResponse, int64, error) {
+	var userPayments []models.UserPaymentResponse
+	var total int64
+	query := u.db.WithContext(ctx).
+		Table("user_has_payments").
+		Joins("JOIN users ON users.user_id = user_has_payments.user_id").
+		Where("user_has_payments.room_id = ?", roomID).
+		Where("user_has_payments.user_id = ?", userID)
+
+	if startDate != nil && endDate != nil {
+		query = query.Where("used_date BETWEEN ? AND ?", *startDate, *endDate)
+	} else if startDate != nil {
+		query = query.Where("used_date >= ?", *startDate)
+	} else if endDate != nil {
+		query = query.Where("used_date <= ?", *endDate)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	offset := (page - 1) * limit
+	if err := query.Select(`
+		user_has_payments.id,
+		user_has_payments.room_id,
+		user_has_payments.user_id,
+		user_has_payments.title,
+		user_has_payments.quantity,
+		user_has_payments.amount,
+		user_has_payments.notes,
+		user_has_payments.used_date,
+		user_has_payments.created_at,
+		users.name AS username`).
+		Order("user_has_payments.used_date DESC").
+		Offset(offset).
+		Limit(limit).
+		Scan(&userPayments).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return userPayments, total, nil
+}
 func NewUserHasPaymentRepository(db *gorm.DB) repository.UserHashPaymentRepository {
 	return &userhaspaymentRepository{
 		db: db,

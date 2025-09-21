@@ -45,14 +45,14 @@ func (s *userHasPaymentService) CalculateMemberExpenseByMemberId(ctx context.Con
 func (s *userHasPaymentService) GetRoomExpenseDetails(ctx context.Context, roomID uuid.UUID, year, month, day string) ([]models.UserPaymentResponse, error) {
 	return s.repo.GetRoomExpenseDetails(ctx, roomID, year, month, day)
 }
-func (s *userHasPaymentService) GetExpenseFromStartDateToEndDate(ctx context.Context, userId, roomId, StartDate, EndDate string) ([]models.UserPaymentResponse, error) {
+func (s *userHasPaymentService) GetExpenseFromStartDateToEndDate(ctx context.Context, userId, roomId, StartDate, EndDate string, page, limit int) ([]models.UserPaymentResponse, int64, error) {
 	user_id, err := uuid.Parse(userId)
 	if err != nil {
-		return nil, errors.New("Invalid user id")
+		return nil, 0, errors.New("Invalid user id")
 	}
 	room_id, err := uuid.Parse(roomId)
 	if err != nil {
-		return nil, errors.New("Invalid room id")
+		return nil, 0, errors.New("Invalid room id")
 	}
 	var start_date *time.Time
 	var end_date *time.Time
@@ -60,7 +60,7 @@ func (s *userHasPaymentService) GetExpenseFromStartDateToEndDate(ctx context.Con
 	if StartDate != "" {
 		t, err := time.Parse("02/01/2006", StartDate)
 		if err != nil {
-			return nil, fmt.Errorf("invalid start_date format, use YYYY-MM-DD")
+			return nil, 0, fmt.Errorf("invalid start_date format, use YYYY-MM-DD")
 		}
 		start_date = &t
 	}
@@ -68,13 +68,46 @@ func (s *userHasPaymentService) GetExpenseFromStartDateToEndDate(ctx context.Con
 	if EndDate != "" {
 		t, err := time.Parse("02/01/2006", EndDate)
 		if err != nil {
-			return nil, fmt.Errorf("invalid end_date format, use YYYY-MM-DD")
+			return nil, 0, fmt.Errorf("invalid end_date format, use YYYY-MM-DD")
 		}
 		// ensure end_date includes the whole day
 		t = t.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
 		end_date = &t
 	}
 
-	expenses, err := s.repo.GetExpensesFilteredFromStartDateToEndDate(ctx, user_id, room_id, start_date, end_date)
-	return expenses, err
+	expenses, total, err := s.repo.GetExpensesFilteredFromStartDateToEndDate(ctx, user_id, room_id, start_date, end_date, page, limit)
+	return expenses, total, err
+}
+func (s *userHasPaymentService) GetExpenseFromStartDateToEndDateOfOneMember(ctx context.Context, userId, roomId, StartDate, EndDate string, page, limit int) ([]models.UserPaymentResponse, int64, error) {
+	user_id, err := uuid.Parse(userId)
+	if err != nil {
+		return nil, 0, errors.New("Invalid user id")
+	}
+	room_id, err := uuid.Parse(roomId)
+	if err != nil {
+		return nil, 0, errors.New("Invalid room id")
+	}
+	var start_date *time.Time
+	var end_date *time.Time
+
+	if StartDate != "" {
+		t, err := time.Parse("02/01/2006", StartDate)
+		if err != nil {
+			return nil, 0, fmt.Errorf("invalid start_date format, use YYYY-MM-DD")
+		}
+		start_date = &t
+	}
+
+	if EndDate != "" {
+		t, err := time.Parse("02/01/2006", EndDate)
+		if err != nil {
+			return nil, 0, fmt.Errorf("invalid end_date format, use YYYY-MM-DD")
+		}
+		// ensure end_date includes the whole day
+		t = t.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
+		end_date = &t
+	}
+
+	expenses, total, err := s.repo.GetExpensesFilteredFromStartDateToEndDateOfOneMember(ctx, user_id, room_id, start_date, end_date, page, limit)
+	return expenses, total, err
 }
